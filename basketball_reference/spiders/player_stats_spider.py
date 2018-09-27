@@ -1,14 +1,16 @@
 import scrapy
 
 """
-Season page:
-https://www.basketball-reference.com/leagues/NBA_2018_per_game.html # just replace 2018
+This spider collects:
+    - player game log statistics by season
+    - player field goal percentage averages by distance by year
 
-Loop through players
-- collect game log links
-- store shooting by distance and yearly stats
-- scrape each game log link
-
+It works by:
+    - providing seasons
+        - parsing player urls
+            - parsing game log urls
+                - parsing and collecting each game log
+            - parsing and collecting  avg(fg%)/distance/year
 """
 
 class PlayerStatsSpider(scrapy.Spider):
@@ -32,12 +34,18 @@ class PlayerStatsSpider(scrapy.Spider):
             yield scrapy.Request(player_url, callback=self.parse_player_url)
 
     def parse_player_url(self, response):
-        # we want two things here:
-        # (1) to get all the game log links
-        # (2) to extract a players field goal percentage by distance by year
+        """
+        we do two things here:
+            -  get all the game log links
+            -  collect a player's avg(fg%)/distance/year
+        """
 
-        # TODO: game logs
-        game_log_urls = response.xpath("")
+        # TODO shooting parsing
+        
+
+        # TODO game logs
+        xpath = "//table[contains(@id,'per_game')]//th[contains(@data-stat,'season')]/a/@href"
+        game_log_urls = response.xpath(xpath).extract()
 
         for game_log_url in game_log_urls:
             yield scrapy.Request(game_log_url, callback=self.parse_game_log)
