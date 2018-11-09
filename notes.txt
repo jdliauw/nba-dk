@@ -1,0 +1,125 @@
+DOCKER
+- Launch container
+  docker-compose up (-d)
+- Run psql within container
+  docker exec -it postgres_db_1 psql -U postgres
+- Back up db
+  docker exec -t postgres_db_1 pg_dumpall -c -U postgres > dump.sql
+- Restore db
+  cat your_dump.sql | docker exec -i your-db-container psql -U postgres
+
+PSQL
+- Format to auto expand
+  \x on
+- Show databases
+  \l
+- Change databases
+  \c [name]
+- Show tables
+  \dt
+- Create table
+  create table [tableName](field type..);
+- Describe table
+  \d [name]
+- Drop table
+  DROP TABLE "table_name";
+
+PANDAS
+- creating dataframe
+  - data = {'Name':['Tom', 'Jack', 'Steve', 'Ricky'],'Age':[28,34,29,42]}
+    df = pd.DataFrame(data)
+  - data = [{'a': 1, 'b': 2},{'a': 5, 'b': 10, 'c': 20}]
+    df = pd.DataFrame(data)
+- accessing dataframe column
+  - df["column_name"]
+  - accessing row with column condition
+    df.loc[df["column"] == value]
+    - with multiple column conditions
+      array = ['yellow', 'green']
+      df.loc[(df['age'] == 21) & df['favorite_color'].isin(array)]
+- dataframe features
+  - size: num elements
+  - shape: num rows x num cols
+  - head(): ...
+  - tail(): ...
+  - drop(columns=["whatever","again"])
+  - delete column -> del df['column'] # note del df.column will NOT work
+  - value counts, df.points.value_counts(dropna=False)
+  - T: transpose
+  - make new col --> ex: df["new_column"] = df.one + df.two
+  - descriptive statistics (describe(), count(), sum(), mean(), median(), mode(), std(), min(), max(), cumsum())  
+    - ex: df["points"].sum()
+      ex: df.describe() || df.describe().T
+    - df.corr() # can choose method: pearson (default), spearman -> df.corr(method='pearson')
+  - sort_values()
+    ex: sorted = df.sort_values(by=["points", "assists"])
+  - filtering
+    ex: df[df["points"] > 10] # get the dataframe for only games in which the player scored more than 10 points
+        df[df.points > 10] # alternatively
+        df["above"] = ["yes" if i > df.points.mean() else "no" for i in df.points] # new column
+    ex: 
+        df[np.logical_and(df.date >= '2018-01-01', df.points > 10)][["points","assists"]].plot()
+        df[(df["date"] >= "2018-01-01") & (df["points"] > 10)][["points","assists"]].plot()
+- tidying data
+  - melt
+    - melted = pd.melt(frame=df,id_vars='index',value_vars=['column1','column2'])
+      ex: melted = pd.melt(frame=df,id_vars='date',value_vars=["points","age_days"])
+  - pivot
+    - pivoted = df.pivot(index='index_col', columns='variable', values='value')
+      ex: new = melted.pivot(index='date', columns='variable', values='value')
+  - concat
+      ex: both = pd.concat([head,tail], axis=0) # axis 0 adds dataframe
+      ex: both = pd.concat([points,assists], axis=1) # separates columns
+  - converting data types
+      df['opponent'] = df['opponent'].astype('category') || df.opponent = df.opponent.astype('category')
+  - value counts
+      df.free_throws_percentage.value_counts(dropna=False)
+  - check isnull
+      df.feature.isnull()
+  - drop nas
+      df.free_throws_percentage.dropna(inplace=[True,False]) # if False assign to var
+
+- display changes
+  pd.set_option("display.max_rows",80)
+  pd.set_option("display.max_columns",10)
+
+MATPLOTLIB
+- import matplotlib.pyplot as plt
+- df[["column", "column2", "column3"]].plot()
+  plt.show()
+- Line graph
+  - df.plot(kind='line', x='date', y='points', alpha=0.5, color='red')
+  - Same graph
+    df.points.plot(kind='line', x='date', y='points', label='points', alpha=0.5, color='red')
+    df.assists.plot(kind='line', x='date', y='assists', label='assists', alpha=0.5, color='blue')
+    plt.xlabel('x axis')
+    plt.ylabel('y axis')
+    plt.title('title')
+    plt.show()
+- Scatter plot
+  - df.plot(kind='scatter', x='x', y='y', alpha=0.5, color='red')
+  - plt.xlabel,ylabel,title
+- Histogram
+  - df.feature.plot(kind='hist', bins=50, figsize=(12,12))
+  - plt.show()
+- Box plot
+  - df.boxplot(column='column', by='group_by')
+
+GENERAL PANDAS NOTES
+dataframes aren't meant to be appended to, appending re-creates and adds (not efficient)
+
+A FEW WORDS ON:
+  - Correlation
+    - Spearman: Benchmarks monotonic nature (characteristic that it is always increasing/decreasing)
+    - Pearson: Benchmarks linearity
+  - Classification vs. Clustering
+    - Classification: a form of supervised learning to classify new data using trained data into preset classes
+      - K-Nearest Neighbors
+    - Clustering: a form of unsupervised learning which is descriptive and can either be flat (programmer defined number of classes)
+                  or hierarchal (algorithm determines number of classes)
+      - K-Means
+  - Definitions
+    - Multivariate regression: when there are multiple input variables
+    - Root mean squared error (RMSE): A metric of a predictive regression model's accuracy
+
+--

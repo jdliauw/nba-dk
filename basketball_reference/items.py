@@ -7,15 +7,8 @@
 
 import scrapy
 
-
-class BasketballReferenceItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
-
 class SeasonLog(scrapy.Item):
     """Season log for a given player during a given season"""
-    player = scrapy.Field()
     player_slug = scrapy.Field()
     season = scrapy.Field()
     games = scrapy.Field()

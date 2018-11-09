@@ -1,0 +1,9 @@
+1. Scrape with Scrapy (then because of js rendering, just beautifulsoup4, requests)
+2. Store in postgres db running in a docker container with persistent storage in volume
+3. Backup and put in AWS RDS
+4. Create web app with login for visualization using Dash.
+5. Simple data analysis with pandas
+
+--
+
+relationship between number of rest days and points

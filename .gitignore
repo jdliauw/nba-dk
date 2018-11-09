@@ -1,0 +1,4 @@
+.vscode/
+**/*.pyc
+.postgres/pgdata/*
+**.pyc
