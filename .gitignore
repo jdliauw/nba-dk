@@ -2,3 +2,5 @@
 **/*.pyc
 .postgres/pgdata/*
 **.pyc
+env/
+postgres/pgdata/
