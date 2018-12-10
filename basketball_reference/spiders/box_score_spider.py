@@ -106,26 +106,37 @@ def scrape_pbp(pbp_url):
     elif tds_size == 2:
       stat["time"] = tds[0].text
       stat["play"] = tds[1].text
-      # print(stat["play"])
-    
+
     if stat:
       stats.append(stat)
 
-  # for stat in stats:
-    # if len(stat) > 2:
-      # print(stat)
+  for stat in stats:
+    if len(stat) > 2:
+      print(stat)
 
 def parse_play(td, stat):
   td_text = td.text
   # example: J. Simmons makes 3-pt jump shot from 25 ft (assist by D. Augustin)
-  if " makes " in td_text:
-    # add scorer/assister
+  if any(k in td_text for k in [" makes ", " misses "]):
+
+    # make or miss
+    if " makes " in td_text:
+      stat["make"] = True
+    else:
+      stat["make"] = False
+
+    # add scorer/[assister, blocker]
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       # extract the href from the tag, then parse the url to get the playerid 
       # example: <a href="/players/a/augusdj01.html">D. Augustin</a>
       stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
-      stat["assister"] = a_tags[1]["href"].split("/")[-1][:-5]
+      if " makes " in td_text:
+        stat["assister"] = a_tags[1]["href"].split("/")[-1][:-5]
+      elif " misses " in td_text:
+        stat["blocker"] = a_tags[1]["href"].split("/")[-1][:-5]
+      else:
+        logging.warning("Unknown stat: {}".format(td_text))
     elif len(a_tags) == 1:
       stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["type"] = 1
@@ -150,8 +161,28 @@ def parse_play(td, stat):
       for type, offset in key_offset:
         if type in td_text:
           stat["distance"] = 0
-  if " misses " in td_text:
-    print(td_text)
+
+  if "rebound" in td_text:
+    a_tags = td.findAll("a")
+    if len(a_tags) == 1:
+      if "offensive" in td_text.lower():
+        stat["orebounder"] = a_tags[0]["href"].split("/")[-1][:-5]
+      elif "defensive" in td_text.lower():
+        stat["drebounder"] = a_tags[0]["href"].split("/")[-1][:-5]
+      else:
+        logging.warning("Unknown rebound type: {}".format(td_text))
+    elif len(a_tags) == 0:
+      # ignore team rebounds
+      pass
+    else:
+      logging.warning("a_tags len of {}", len)
+
+  """
+  turnover (player, team), (bad pass, steal, shot clock)
+  foul (personal, shooting, technical)
+  timeout,
+
+  """
 
 def main():
   logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
