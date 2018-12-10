@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, date, timedelta
 
+import logging
 import random
 import requests
 import time
@@ -73,7 +74,7 @@ def scrape_box_score(box_score_url):
         pass
       except Exception as e:
         print(e)
-    print(stats)
+    # print(stats)
 
 def scrape_pbp(pbp_url):
   # soup = make_soup(pbp_url)
@@ -87,34 +88,81 @@ def scrape_pbp(pbp_url):
     stat = {}
 
     if tds_size == 6:
+      # basketball-reference columns
       for i, v in enumerate(["time", "home_play", "home_points", "score", "away_points", "away_play"]):
-
-        # if i in [1, 5]:
-          # stat["play"] = 
+        if i in [2, 4]:
+          continue
 
         td_text = tds[i].text
-        if len(td_text) > 1 and v is "home_play":
-          stat["home_play"] = td_text
-        elif len(td_text) > 1 and v is "away_play":
-          stat["away_play"] = td_text
+
+        # PLAYS
+        # basketball-reference divides plays by home/away, but for our purposes we don't care since 
+        # we can extract this from the player. as far as i know, there is no instance where there is 
+        # both a home and away play, but we'll throw an exception in case
+        if i in [1, 5] and len(td_text) > 1:
+          parse_play(tds[i], stat)
         elif len(td_text) > 1:
           stat[v] = td_text
     elif tds_size == 2:
       stat["time"] = tds[0].text
-      stat["home_play"] = tds[1].text
-      stat["away_play"] = tds[1].text
+      stat["play"] = tds[1].text
+      # print(stat["play"])
     
     if stat:
       stats.append(stat)
 
-  for stat in stats:
-    if "home_play" in stat and "make" in stat["home_play"]:
-      print(stat["home_play"])
+  # for stat in stats:
+    # if len(stat) > 2:
+      # print(stat)
 
-if __name__ == '__main__':
+def parse_play(td, stat):
+  td_text = td.text
+  # example: J. Simmons makes 3-pt jump shot from 25 ft (assist by D. Augustin)
+  if " makes " in td_text:
+    # add scorer/assister
+    a_tags = td.findAll("a")
+    if len(a_tags) == 2:
+      # extract the href from the tag, then parse the url to get the playerid 
+      # example: <a href="/players/a/augusdj01.html">D. Augustin</a>
+      stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["assister"] = a_tags[1]["href"].split("/")[-1][:-5]
+    elif len(a_tags) == 1:
+      stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["type"] = 1
+    else:
+      logging.warning("WTF, NOT THE RIGHT AMOUNT OF A TAGS IN SCORER/ASSISTER PARSING")
+
+    if "-pt" in td_text:
+      stat["type"] = int(td_text[td_text.find("-pt")-1 : td_text.find("-pt")])
+      
+      key_offset = [("jump shot from ", 15),
+                    ("hook shot from ", 15),
+                    ("layup from ", 11),
+                    ("dunk from ", 10),
+                    ]
+      for type, offset in key_offset:
+        if type in td_text:
+          stat["distance"] = int(td_text[td_text.find(type) + offset : td_text.find(" ft")]) 
+
+      key_offset = [("layup at", 9),
+                    ("dunk at", 8),
+                    ]
+      for type, offset in key_offset:
+        if type in td_text:
+          stat["distance"] = 0
+  if " misses " in td_text:
+    print(td_text)
+
+def main():
+  logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
+
   yesterday = date.today() - timedelta(1)
   # scrape_box_scores(yesterday.month, yesterday.day, yesterday.year)
   scrape_pbp("https://www.basketball-reference.com/boxscores/pbp/201812040MIA.html")
+
+
+if __name__ == '__main__':
+  main()
 
   # store and fetch from instead of requesting
   # store_html("insert url")
