@@ -11,6 +11,39 @@ hey this was cool:
 # if all(key in stat for key in ["time", "home_play"]):
 """
 
+long_abbrev_dict = {
+  "Atlanta": "ATL",
+  "Boston": "BOS",
+  "Brooklyn": "BRK",
+  "Chicago": "CHI",
+  "Charlotte": "CHO",
+  "Cleveland": "CLE",
+  "Dallas": "DAL",
+  "Denver": "DEN",
+  "Detroit": "DET",
+  "Golden State": "GSW",
+  "Houston": "HOU",
+  "Indiana": "IND",
+  "LA Clippers": "LAC",
+  "LA Lakers": "LAL",
+  "Memphis": "MEM",
+  "Miami": "MIA",
+  "Milwaukee": "MIL",
+  "Minnesota": "MIN",
+  "New Orleans": "NOP",
+  "New York": "NYK",
+  "Oklahoma City": "OKC",
+  "Orlando": "ORL",
+  "Philadelphia": "PHI",
+  "Phoenix": "PHO",
+  "Portland": "POR",
+  "Sacramento": "SAC",
+  "San Antonio": "SAS",
+  "Toronto": "TOR",
+  "Utah": "UTA",
+  "Washington": "WAS"
+}
+
 def make_soup(url):
   url_request = requests.get(url)
   html = url_request.text
@@ -74,7 +107,6 @@ def scrape_box_score(box_score_url):
         pass
       except Exception as e:
         print(e)
-    # print(stats)
 
 def scrape_pbp(pbp_url):
   # soup = make_soup(pbp_url)
@@ -110,15 +142,20 @@ def scrape_pbp(pbp_url):
     if stat:
       stats.append(stat)
 
+  count = 0
   for stat in stats:
-    if len(stat) > 2:
+    if "steal" in stat:
       print(stat)
+      count += 1
+
+  print(count)
 
 def parse_play(td, stat):
   td_text = td.text
+
+  # MAKES/MISSES
   # example: J. Simmons makes 3-pt jump shot from 25 ft (assist by D. Augustin)
   if any(k in td_text for k in [" makes ", " misses "]):
-
     # make or miss
     if " makes " in td_text:
       stat["make"] = True
@@ -143,9 +180,10 @@ def parse_play(td, stat):
     else:
       logging.warning("WTF, NOT THE RIGHT AMOUNT OF A TAGS IN SCORER/ASSISTER PARSING")
 
+    # free throws are points scored but do not have "-pt"
     if "-pt" in td_text:
       stat["type"] = int(td_text[td_text.find("-pt")-1 : td_text.find("-pt")])
-      
+
       key_offset = [("jump shot from ", 15),
                     ("hook shot from ", 15),
                     ("layup from ", 11),
@@ -162,6 +200,7 @@ def parse_play(td, stat):
         if type in td_text:
           stat["distance"] = 0
 
+  # REBOUNDS
   if "rebound" in td_text:
     a_tags = td.findAll("a")
     if len(a_tags) == 1:
@@ -172,16 +211,38 @@ def parse_play(td, stat):
       else:
         logging.warning("Unknown rebound type: {}".format(td_text))
     elif len(a_tags) == 0:
-      # ignore team rebounds
-      pass
+      if "offensive" in td_text.lower():
+        stat["orebounder"] = "team"
+      elif "defensive" in td_text.lower():
+        stat["drebounder"] = "team"
     else:
       logging.warning("a_tags len of {}", len)
+
+  # TIMEOUT (starting 2018 season, only full)
+  if "timeout" in td_text:
+    team = td_text[:td_text.find(" full timeout")]
+    stat["full_timeout"] = long_abbrev_dict[team]
+
+  # TURNOVERS
+  if "Turnover" in td_text:
+    a_tags = td.findAll("a")
+    if len(a_tags) == 2:
+      stat["turnover"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["steal"] = a_tags[1]["href"].split("/")[-1][:-5]
+      stat["turnover_type"] = td_text[td_text.find("(") + 1: td_text.find(";")]
+    elif len(a_tags) == 1:
+      stat["turnover"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["turnover_type"] = td_text[td_text.find("(") + 1 : td_text.find(")")]
+    elif len(a_tags) == 0:
+      stat["turnover"] = "team"
+    else:
+      logging.warning("Unknown type of turnover: {}".format(td_text))
 
   """
   turnover (player, team), (bad pass, steal, shot clock)
   foul (personal, shooting, technical)
   timeout,
-
+  enters the game
   """
 
 def main():
