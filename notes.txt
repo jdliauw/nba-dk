@@ -121,5 +121,3 @@ A FEW WORDS ON:
   - Definitions
     - Multivariate regression: when there are multiple input variables
     - Root mean squared error (RMSE): A metric of a predictive regression model's accuracy
-
---
