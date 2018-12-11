@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, date, timedelta
 
 import logging
+import pdb
 import random
 import requests
 import time
@@ -59,7 +60,7 @@ def get_soup():
   soup = BeautifulSoup(html, 'html.parser')
   return soup
 
-def scrape_box_scores(month, day, year):
+def scrape_day(month, day, year):
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
   soup = make_soup(url)
   a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
@@ -67,27 +68,29 @@ def scrape_box_scores(month, day, year):
     href = a_tag["href"]
     if "boxscore" in href and a_tag.text == 'Box Score':
       base = "https://www.basketball-reference.com"
-      # scrape_box_score(base + href)
+      scrape_box_score(base + href)
       scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
 
 def scrape_box_score(box_score_url):
   # [3,6) second crawl delay; robots.txt asks for 3s
-  time.sleep(4 + (10 * random.random() % 3))
+  # time.sleep(4 + (10 * random.random() % 3))
 
-  soup = make_soup(box_score_url)
+  # soup = make_soup(box_score_url)
+  soup = get_soup()
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
   datetime_object = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
   year = int(datetime.strftime(datetime_object, "%Y"))
   month = int(datetime.strftime(datetime_object, "%m"))
   day = int(datetime.strftime(datetime_object, "%d"))
   weekday = datetime.strftime(datetime_object, "%A")
-
+  stats = []
+  
   tables = soup.findAll("table", {"class": ["sortable", "stats_table", "now_sortable"]})
   for table in tables:
     tbody = table.find("tbody")
     trs = tbody.findAll("tr")
 
-    stats = []
+    count = 0
     for i, tr in enumerate(trs):
       tds = tr.findAll("td")
       try:
@@ -102,6 +105,9 @@ def scrape_box_score(box_score_url):
         pass
       except Exception as e:
         print(e)
+
+    for stat in stats:
+      count += 1
 
 def scrape_pbp(pbp_url):
   # soup = make_soup(pbp_url)
@@ -269,13 +275,14 @@ def main():
   logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
 
   yesterday = date.today() - timedelta(1)
-  # scrape_box_scores(yesterday.month, yesterday.day, yesterday.year)
-  scrape_pbp("https://www.basketball-reference.com/boxscores/pbp/201812040MIA.html")
+  # scrape_day(yesterday.month, yesterday.day, yesterday.year)
+  scrape_box_score("dicks")
+  # scrape_pbp("https://www.basketball-reference.com/boxscores/pbp/201812040MIA.html")
 
 
 if __name__ == '__main__':
   main()
 
   # store and fetch from instead of requesting
-  # store_html("insert url")
+  # store_html("https://www.basketball-reference.com/boxscores/201812040MIA.html")
   # get_soup()
