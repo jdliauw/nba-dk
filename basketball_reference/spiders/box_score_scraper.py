@@ -5,6 +5,7 @@ import logging
 import pdb
 import random
 import requests
+import scraper
 import time
 
 long_abbrev_dict = {
@@ -40,29 +41,9 @@ long_abbrev_dict = {
   "Washington": "WAS"
 }
 
-def make_soup(url):
-  url_request = requests.get(url)
-  html = url_request.text
-  soup = BeautifulSoup(html, 'html.parser')
-  return soup
-
-def store_html(url):
-  url_request = requests.get(url)
-  html = url_request.text
-  f = open("soup.html", "w+")
-  f.write(html)
-  f.close()
-
-def get_soup():
-  f = open("soup.html", "r")
-  html = f.read()
-  f.close()
-  soup = BeautifulSoup(html, 'html.parser')
-  return soup
-
 def scrape_day(month, day, year):
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-  soup = make_soup(url)
+  soup = scraper.make_soup(url)
   a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
   for a_tag in a_tags:
     href = a_tag["href"]
@@ -75,8 +56,8 @@ def scrape_box_score(box_score_url):
   # [3,6) second crawl delay; robots.txt asks for 3s
   # time.sleep(4 + (10 * random.random() % 3))
 
-  # soup = make_soup(box_score_url)
-  soup = get_soup()
+  # soup = scraper.make_soup(box_score_url)
+  soup = scraper.get_soup()
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
   datetime_object = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
   year = int(datetime.strftime(datetime_object, "%Y"))
@@ -107,15 +88,15 @@ def scrape_box_score(box_score_url):
       except TypeError:
         pass
       except Exception as e:
-        print(e, "<-- exception")
+        logging.error("Exception {} caught".format(e))
 
   # TODO: store to database
   # for stat in stats:
   #   print(stat) 
 
 def scrape_pbp(pbp_url):
-  # soup = make_soup(pbp_url)
-  soup = get_soup()
+  # soup = scraper.make_soup(pbp_url)
+  soup = scraper.get_soup()
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   stats = []
 
@@ -253,14 +234,14 @@ def parse_play(td, stat):
         stat["foul_type"] = "shooting"
       elif "Offensive foul" in td_text:
         stat["foul_type"] = "offensive"
-      else: 
+      else:
         logging.warning("Unknown type of foul: {}".format(td_text))  
     elif len(a_tags) == 1 and "Technical foul" in td_text:
       stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["foul_type"] = "technical"
     else:
       logging.warning("Unknown type of foul: {}".format(td_text))
-  
+
   elif "enters the game" in td_text:
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
@@ -288,5 +269,5 @@ if __name__ == '__main__':
   main()
 
   # store and fetch from instead of requesting
-  # store_html("https://www.basketball-reference.com/boxscores/201812040MIA.html")
-  # get_soup()
+  # scraper.store_html("https://www.basketball-reference.com/boxscores/201812040MIA.html")
+  # scraper.get_soup()
