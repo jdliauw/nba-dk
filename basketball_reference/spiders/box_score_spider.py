@@ -83,7 +83,7 @@ def scrape_box_score(box_score_url):
   month = int(datetime.strftime(datetime_object, "%m"))
   day = int(datetime.strftime(datetime_object, "%d"))
   weekday = datetime.strftime(datetime_object, "%A")
-  stats = []
+  stats = {}
   
   tables = soup.findAll("table", {"class": ["sortable", "stats_table", "now_sortable"]})
   for table in tables:
@@ -96,18 +96,22 @@ def scrape_box_score(box_score_url):
       try:
         id = tr.th.a["href"].split("/")[-1][:-5]
         starter = True if i < 5 else False
-        player = {"id": id, "starter": starter}
+
+        if id not in stats:
+          stats[id] = {}
+        stats[id]["starter"] = starter
 
         for td in tds:
-          player[td["data-stat"]] = td.text
-        stats.append(player)
+          stats[id][td["data-stat"]] = td.text
+
       except TypeError:
         pass
       except Exception as e:
-        print(e)
+        print(e, "<-- exception")
 
-    for stat in stats:
-      count += 1
+  # TODO: store to database
+  # for stat in stats:
+  #   print(stat) 
 
 def scrape_pbp(pbp_url):
   # soup = make_soup(pbp_url)
@@ -269,7 +273,7 @@ def parse_play(td, stat):
     stat["team_violation"] = "kicked ball"
 
   else:
-    print(td_text)
+    logging.warning("Unknown type of play: {}".format(td_text))
 
 def main():
   logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
