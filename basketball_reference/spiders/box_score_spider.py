@@ -6,11 +6,6 @@ import random
 import requests
 import time
 
-"""
-hey this was cool: 
-# if all(key in stat for key in ["time", "home_play"]):
-"""
-
 long_abbrev_dict = {
   "Atlanta": "ATL",
   "Boston": "BOS",
@@ -141,20 +136,15 @@ def scrape_pbp(pbp_url):
 
     if stat:
       stats.append(stat)
-
-  count = 0
-  for stat in stats:
-    if "steal" in stat:
-      print(stat)
-      count += 1
-
-  print(count)
+  
+  # TODO: store to database
+  # for stat in stats:
+  #   print(stat)
 
 def parse_play(td, stat):
   td_text = td.text
 
   # MAKES/MISSES
-  # example: J. Simmons makes 3-pt jump shot from 25 ft (assist by D. Augustin)
   if any(k in td_text for k in [" makes ", " misses "]):
     # make or miss
     if " makes " in td_text:
@@ -162,7 +152,6 @@ def parse_play(td, stat):
     else:
       stat["make"] = False
 
-    # add scorer/[assister, blocker]
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       # extract the href from the tag, then parse the url to get the playerid 
@@ -178,7 +167,7 @@ def parse_play(td, stat):
       stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["type"] = 1
     else:
-      logging.warning("WTF, NOT THE RIGHT AMOUNT OF A TAGS IN SCORER/ASSISTER PARSING")
+      logging.warning("Unknown type of play: {}".format(td_text))
 
     # free throws are points scored but do not have "-pt"
     if "-pt" in td_text:
@@ -201,7 +190,7 @@ def parse_play(td, stat):
           stat["distance"] = 0
 
   # REBOUNDS
-  if "rebound" in td_text:
+  elif " rebound " in td_text:
     a_tags = td.findAll("a")
     if len(a_tags) == 1:
       if "offensive" in td_text.lower():
@@ -219,12 +208,12 @@ def parse_play(td, stat):
       logging.warning("a_tags len of {}", len)
 
   # TIMEOUT (starting 2018 season, only full)
-  if "timeout" in td_text:
+  elif " timeout" in td_text:
     team = td_text[:td_text.find(" full timeout")]
     stat["full_timeout"] = long_abbrev_dict[team]
 
   # TURNOVERS
-  if "Turnover" in td_text:
+  elif "Turnover " in td_text:
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       stat["turnover"] = a_tags[0]["href"].split("/")[-1][:-5]
@@ -235,15 +224,46 @@ def parse_play(td, stat):
       stat["turnover_type"] = td_text[td_text.find("(") + 1 : td_text.find(")")]
     elif len(a_tags) == 0:
       stat["turnover"] = "team"
+      stat["turnover_type"] = td_text[td_text.find("(") + 1 : td_text.find(")")]
     else:
       logging.warning("Unknown type of turnover: {}".format(td_text))
 
-  """
-  turnover (player, team), (bad pass, steal, shot clock)
-  foul (personal, shooting, technical)
-  timeout,
-  enters the game
-  """
+  # FOULS
+  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Shooting foul", "Offensive foul", "Technical foul"]):
+    a_tags = td.findAll("a")
+    if len(a_tags) == 2:
+      stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["foul_drawer"] = a_tags[1]["href"].split("/")[-1][:-5]
+
+      if "Loose ball" in td_text:
+        stat["foul_type"] = "loose ball"
+      elif "Personal foul" in td_text:
+        stat["foul_type"] = "personal"
+      elif "Shooting foul" in td_text:
+        stat["foul_type"] = "shooting"
+      elif "Offensive foul" in td_text:
+        stat["foul_type"] = "offensive"
+      else: 
+        logging.warning("Unknown type of foul: {}".format(td_text))  
+    elif len(a_tags) == 1 and "Technical foul" in td_text:
+      stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["foul_type"] = "technical"
+    else:
+      logging.warning("Unknown type of foul: {}".format(td_text))
+  
+  elif "enters the game" in td_text:
+    a_tags = td.findAll("a")
+    if len(a_tags) == 2:
+      stat["sub_in"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["sub_out"] = a_tags[1]["href"].split("/")[-1][:-5]
+    else:
+      logging.warning("Unknown type of substitution: {}".format(td_text))
+
+  elif "Violation " in td_text:
+    stat["team_violation"] = "kicked ball"
+
+  else:
+    print(td_text)
 
 def main():
   logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
