@@ -1,9 +1,10 @@
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 
-def get_teams(soup):
-  teams = soup.find("div", {"class" : "scorebox"}).findAll("a", {"itemprop" : "name"})
-  return teams[1]["href"].split("/")[2], teams[0]["href"].split("/")[2]
+"""
+Parsing relevant tables from: 
+https://www.basketball-reference.com/leagues/NBA_2019.html
+"""
 
 def main():
   # session = HTMLSession()
@@ -13,15 +14,15 @@ def main():
   table_ids = [
     "confs_standings_E",
     "confs_standings_W",
-    # "team-stats-per_game",
-    # "opponent-stats-per_game",
     "team-stats-base",
     "opponent-stats-base",
-    # "team-stats-per_poss",
-    # "opponent-stats-per_poss",
-    # "misc_stats",
-    # "team_shooting",
-    # "opponent_shooting",
+    "team-stats-per_poss",
+    "opponent-stats-per_poss",
+    "misc_stats",
+    "team_shooting",
+    "opponent_shooting",
+    # "team-stats-per_game", 
+    # "opponent-stats-per_game"
   ]
 
   for table_id in table_ids:
@@ -62,31 +63,59 @@ def main():
 
       # TODO: Store in DB
 
-    elif table_id in ["team-stats-base", "opponent-stats-base"]:
+    elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      to = "team" if table_id in "team-stats-base" else "opponent"
-      team_stats = { to: {}}
+      team_stats = { table_id : {}}
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
+
+        # if table_id not in 
         rank  = int(team.find("th", {"data-stat" : "ranker"}).text)
-        team_stats[to][team_name] = {"rank" : rank }
+        team_stats[table_id][team_name] = {"rank" : rank }
         
         fields = team.findAll("td")
         for field in fields[1:]:
-          team_stats[to][team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+          team_stats[table_id][team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
 
-      # for to in team_stats:
-      #   for team in team_stats[to]:
-      #     print(team, team_stats[to][team])
+      # for table_id in team_stats:
+      #   for team in team_stats[table_id]:
+      #     print(team, team_stats[table_id][team])
 
       # TODO: Store in DB
 
-    elif table_id == "team-stats-per_poss": # in [, "opponent-stats-per_poss"]
-      
+    elif table_id in ["team_shooting", "opponent_shooting"]:
+      teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
+      shooting_stats = {}
+      for team in teams:
+        team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
 
-    # elif table_id == "misc_stats":
-    # elif table_id == "team_shooting": # in [, "opponent_shooting"]
+        if team_name not in shooting_stats:
+          shooting_stats[team_name] = {}
+        
+        fields = team.findAll("td")
+        for field in fields[1:]:
+          shooting_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
 
+    elif table_id == "misc_stats":
+      teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
+      misc_stats = {}
+      for team in teams:
+        team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
+
+        if team_name not in misc_stats:
+          misc_stats[team_name] = {}
+        
+        fields = team.findAll("td")
+        for field in fields[1:]:
+          text = field.text
+          if field["data-stat"] == "arena_name":
+            misc_stats[team_name][field["data-stat"]] = text
+            continue
+
+          if field["data-stat"] in ["net_rtg", "attendance", "attendance_per_g"]:
+            text = field.text.replace("+", "").replace(",", "")
+
+          misc_stats[team_name][field["data-stat"]] = float(text) if "." in text else int(text)
 
 """
 scraping
