@@ -1,4 +1,11 @@
 DOCKER
+
+- Pull 
+  docker pull [name]
+- List images
+  docker images
+- See running processes
+  docker ps
 - Launch container
   docker-compose up (-d)
 - Run psql within container
@@ -121,3 +128,8 @@ A FEW WORDS ON:
   - Definitions
     - Multivariate regression: when there are multiple input variables
     - Root mean squared error (RMSE): A metric of a predictive regression model's accuracy
+
+
+Other
+Binaries: Non human readable files, can be executables which are compiled binaries
+Linux file system: /bin: for binaries, /lib: necessary libraries, /etc: configuration files

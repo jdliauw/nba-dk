@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from datetime import datetime, date, timedelta
 
+import json
 import logging
 import pdb
 import random
@@ -41,23 +42,32 @@ long_abbrev_dict = {
   "Washington": "WAS"
 }
 
+# global..sorry
+# lineup = []
+
+def get_teams(soup):
+  teams = soup.find("div", {"class" : "scorebox"}).findAll("a", {"itemprop" : "name"})
+  return teams[1]["href"].split("/")[2], teams[0]["href"].split("/")[2]
+
 def scrape_day(month, day, year):
-  url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-  soup = scraper.make_soup(url)
-  a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
-  for a_tag in a_tags:
-    href = a_tag["href"]
-    if "boxscore" in href and a_tag.text == 'Box Score':
-      base = "https://www.basketball-reference.com"
-      scrape_box_score(base + href)
-      scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+  print(month, day, year)
+  # url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
+  # soup = scraper.make_soup(url)
+  # a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
+  # for a_tag in a_tags:
+  #   href = a_tag["href"]
+  #   if "boxscore" in href and a_tag.text == 'Box Score':
+  #     base = "https://www.basketball-reference.com"
+  #     scrape_box_score(base + href)
+  #     scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
 
 def scrape_box_score(box_score_url):
   # [3,6) second crawl delay; robots.txt asks for 3s
   # time.sleep(4 + (10 * random.random() % 3))
-
   # soup = scraper.make_soup(box_score_url)
-  soup = scraper.get_soup()
+  soup = scraper.get_soup("bs")
+  home, away = get_teams(soup)
+
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
   datetime_object = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
   year = int(datetime.strftime(datetime_object, "%Y"))
@@ -67,11 +77,12 @@ def scrape_box_score(box_score_url):
   stats = {}
   
   tables = soup.findAll("table", {"class": ["sortable", "stats_table", "now_sortable"]})
+
   for table in tables:
     tbody = table.find("tbody")
     trs = tbody.findAll("tr")
+    team = table.get("id").split("_")[1].upper()
 
-    count = 0
     for i, tr in enumerate(trs):
       tds = tr.findAll("td")
       try:
@@ -81,6 +92,7 @@ def scrape_box_score(box_score_url):
         if id not in stats:
           stats[id] = {}
         stats[id]["starter"] = starter
+        stats[id]["team"] = team
 
         for td in tds:
           stats[id][td["data-stat"]] = td.text
@@ -90,13 +102,16 @@ def scrape_box_score(box_score_url):
       except Exception as e:
         logging.error("Exception {} caught".format(e))
 
-  # TODO: store to database
+  f = open("{}-{}-date.json".format(home, away), "w+")
+  f.write(json.dumps(stats))
+  f.close()
   # for stat in stats:
-  #   print(stat) 
+  #   print(stats[stat], "\n")
 
 def scrape_pbp(pbp_url):
   # soup = scraper.make_soup(pbp_url)
-  soup = scraper.get_soup()
+  soup = scraper.get_soup("pbp")
+  home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   stats = []
 
@@ -106,29 +121,40 @@ def scrape_pbp(pbp_url):
     stat = {}
 
     if tds_size == 6:
-      # basketball-reference columns
-      for i, v in enumerate(["time", "home_play", "home_points", "score", "away_points", "away_play"]):
-        if i in [2, 4]:
-          continue
-
+      # for i, v in enumerate(["time", "_", "_", "score", "_", "_"]):
+      for i in range(6):
         td_text = tds[i].text
 
+        # skip if no text
+        if len(td_text) <= 1:
+          continue
+
         # PLAYS
-        # basketball-reference divides plays by home/away, but for our purposes we don't care since 
-        # we can extract this from the player. as far as i know, there is no instance where there is 
-        # both a home and away play, but we'll throw an exception in case
-        if i in [1, 5] and len(td_text) > 1:
+        if i in [1, 5]:
           parse_play(tds[i], stat)
-        elif len(td_text) > 1:
-          stat[v] = td_text
+        # stuff we don't care about (home/away point differential(extractable))
+        elif i in [2, 4]:
+          continue
+        # SCORES
+        elif i == 3:
+          away_score, home_score = td_text.split("-")
+          stat["away_score"] = away_score
+          stat["home_score"] = home_score
+        else: # i == 0
+          stat["time"] = td_text
+
     elif tds_size == 2:
       stat["time"] = tds[0].text
       stat["play"] = tds[1].text
 
     if stat:
       stats.append(stat)
-  
-  # TODO: store to database
+
+  f = open("{}-{}-date-pbp.json".format(home, away), "w+")
+  f.write(json.dumps(stats))
+  f.close()
+
+  # # TODO: store to database
   # for stat in stats:
   #   print(stat)
 
@@ -220,7 +246,7 @@ def parse_play(td, stat):
       logging.warning("Unknown type of turnover: {}".format(td_text))
 
   # FOULS
-  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Shooting foul", "Offensive foul", "Technical foul"]):
+  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Personal take foul", "Shooting foul", "Offensive foul", "Technical foul"]):
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
@@ -228,7 +254,7 @@ def parse_play(td, stat):
 
       if "Loose ball" in td_text:
         stat["foul_type"] = "loose ball"
-      elif "Personal foul" in td_text:
+      elif any(k in td_text for k in ["Personal foul", "Personal take foul"]):
         stat["foul_type"] = "personal"
       elif "Shooting foul" in td_text:
         stat["foul_type"] = "shooting"
@@ -242,32 +268,61 @@ def parse_play(td, stat):
     else:
       logging.warning("Unknown type of foul: {}".format(td_text))
 
+  # SUBSTITUTIONS
+  # TODO: add stat for lineup
   elif "enters the game" in td_text:
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       stat["sub_in"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["sub_out"] = a_tags[1]["href"].split("/")[-1][:-5]
+      '''
+        Lineups unfortunately can't be determined from the "sub in" / "sub out" pbp
+        The lineup that starts each quarter is not reported (only for the game (1st))
+
+      if stat["sub_out"] not in lineup:
+        print("{} subbed out but not in lineup list: {}".format(stat["sub_out"], lineup))
+        logging.warning("{} subbed out but not in lineup list: {}".format(stat["sub_out"], lineup))
+      else:
+        print(td_text, "\n", lineup)
+      
+      for i, tuple in enumerate(lineup):
+        player, team = tuple
+ 
+        if stat["sub_out"] == player:
+          print("{} in for {}".format(stat["sub_in"], stat["sub_out"]))
+          lineup[i] = (stat["sub_in"], team)
+          break
+      '''
     else:
       logging.warning("Unknown type of substitution: {}".format(td_text))
 
+  # VIOLATIONS
   elif "Violation " in td_text:
     stat["team_violation"] = "kicked ball"
 
+  # UNKNOWN
   else:
     logging.warning("Unknown type of play: {}".format(td_text))
 
 def main():
-  logging.basicConfig(filename='pbp.log',level=logging.DEBUG)
-
   yesterday = date.today() - timedelta(1)
-  # scrape_day(yesterday.month, yesterday.day, yesterday.year)
-  scrape_box_score("dicks")
-  # scrape_pbp("https://www.basketball-reference.com/boxscores/pbp/201812040MIA.html")
+  year = yesterday.year
+  month = yesterday.month
+  day = yesterday.day
+
+  logging.basicConfig(filename="{}-{}-{}.log".format(year, month, day), level=logging.DEBUG)
+
+  # Scrape box score / pbp
+  # scrape_day(month, day, year)
+  # scrape_box_score("") # testing
+  # scrape_pbp("")       # testing
 
 
 if __name__ == '__main__':
   main()
 
-  # store and fetch from instead of requesting
-  # scraper.store_html("https://www.basketball-reference.com/boxscores/201812040MIA.html")
-  # scraper.get_soup()
+  """
+  # store and fetch from instead of requesting (make_soup())
+  scraper.store_html("name", "https://www.basketball-reference.com/boxscores/201812040MIA.html")
+  scraper.get_soup()
+  """

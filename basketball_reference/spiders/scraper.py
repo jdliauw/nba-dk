@@ -8,15 +8,15 @@ def make_soup(url):
   soup = BeautifulSoup(html, 'html.parser')
   return soup
 
-def store_html(url):
+def store_html(name, url):
   url_request = requests.get(url)
   html = url_request.text
-  f = open("soup.html", "w+")
+  f = open("{}.html".format(name), "w+")
   f.write(html)
   f.close()
 
-def get_soup():
-  f = open("soup.html", "r")
+def get_soup(name):
+  f = open("{}.html".format(name), "r")
   html = f.read()
   f.close()
   soup = BeautifulSoup(html, 'html.parser')
