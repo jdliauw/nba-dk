@@ -320,9 +320,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-
-  """
-  # store and fetch from instead of requesting (make_soup())
-  scraper.store_html("name", "https://www.basketball-reference.com/boxscores/201812040MIA.html")
-  scraper.get_soup()
-  """

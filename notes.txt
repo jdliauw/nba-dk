@@ -7,7 +7,7 @@ DOCKER
 - See running processes
   docker ps
 - Launch container
-  docker-compose up (-d)
+  docker-compose up (-d) || docker run []
 - Run psql within container
   docker exec -it postgres_db_1 psql -U postgres
 - Back up db
