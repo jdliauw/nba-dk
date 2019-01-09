@@ -133,3 +133,5 @@ A FEW WORDS ON:
 Other
 Binaries: Non human readable files, can be executables which are compiled binaries
 Linux file system: /bin: for binaries, /lib: necessary libraries, /etc: configuration files
+Docker: compose (yaml) is for multiple container launching (to avoid docker run), but all on same host
+        swarm is orchestration, like kubernetes (google)
