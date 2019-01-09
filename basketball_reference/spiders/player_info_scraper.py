@@ -54,7 +54,7 @@ def main():
   logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
   # scraper.store_html("https://www.basketball-reference.com/players/a/allengr01.html")
   # get_player_urls()
-  scrape_player_info("dicks")
+  scrape_player_info("woah")
 
 if __name__ == "__main__":
   main()

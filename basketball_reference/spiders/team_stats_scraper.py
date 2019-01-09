@@ -21,8 +21,6 @@ def main():
     "misc_stats",
     "team_shooting",
     "opponent_shooting",
-    # "team-stats-per_game", 
-    # "opponent-stats-per_game"
   ]
 
   for table_id in table_ids:
@@ -116,12 +114,6 @@ def main():
             text = field.text.replace("+", "").replace(",", "")
 
           misc_stats[team_name][field["data-stat"]] = float(text) if "." in text else int(text)
-
-"""
-scraping
-controller (2)
-message deb/mark
-"""
 
 if __name__ == "__main__":
   main()
