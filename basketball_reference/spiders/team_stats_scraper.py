@@ -34,7 +34,7 @@ def get_team_stats(url):
   response = session.get(url)
   response.html.render()
 
-  standings = {}
+  standings = []
   team_stats = {}
   shooting_stats = {}
   misc_stats = {}
@@ -47,14 +47,13 @@ def get_team_stats(url):
 
     if table_id in ["confs_standings_E", "confs_standings_W"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      conference = "E" if table_id in "confs_standings_E" else "W"
-      standings[conference] = {}
+      conference = "east" if table_id in "confs_standings_E" else "west"
 
-      for team in teams: 
+      for team in teams:
         team_name = team.find("th", {"data-stat": "team_name"}).a["href"].split("/")[2]
         seed = team.find("th", {"data-stat": "team_name"}).text
         seed = int(seed[seed.find("(") + 1 : seed.find(")")])
-        standings[conference][team_name] = {"seed": seed}
+        team_stat = {"team": team_name, "conference" : conference, "seed": seed }
 
         fields = team.findAll("td")
         for field in fields:
@@ -68,8 +67,10 @@ def get_team_stats(url):
             val = 0.0
           else:
             val = int(val)
+          
+          team_stat[data_stat] = val
 
-          standings[conference][team_name][data_stat] = val
+        standings[conference].append(team_stat)
 
     elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
