@@ -38,7 +38,7 @@ def get_player_urls(url):
 
 def get_player_info(url):
   pid = url[url.rfind("/") + 1 : -5]
-  all_stats = {pid : {}}
+  all_stats = {"pid" : pid}
 
   # get soup, render js
   session = HTMLSession()
@@ -54,16 +54,16 @@ def get_player_info(url):
   birth_city = birth_place[birth_place.find("in\xa0") + 3 : birth_place.find(",")]
   birth_state = birth_place[birth_place.find(',') + 2 :]
   
-  all_stats[pid]["first"] = first
-  all_stats[pid]["last"] = last
-  all_stats[pid]["feet"] = feet
-  all_stats[pid]["inches"] = inches
-  all_stats[pid]["lbs"] = lbs
-  all_stats[pid]["birth_year"] = birth_year
-  all_stats[pid]["birth_month"] = birth_month
-  all_stats[pid]["birth_day"] = birth_day
-  all_stats[pid]["birth_city"] = birth_city
-  all_stats[pid]["birth_state"] = birth_state
+  all_stats["first"] = first
+  all_stats["last"] = last
+  all_stats["feet"] = feet
+  all_stats["inches"] = inches
+  all_stats["lbs"] = lbs
+  all_stats["birth_year"] = birth_year
+  all_stats["birth_month"] = birth_month
+  all_stats["birth_day"] = birth_day
+  all_stats["birth_city"] = birth_city
+  all_stats["birth_state"] = birth_state
 
   # college stats table is the only table of interest that is dynamically generated
   # so let's not render the js if we don't have to since it's heavy
@@ -74,7 +74,7 @@ def get_player_info(url):
       college_stats_table = college_stats_table.html
 
       # store separately?
-      all_stats[pid]["college_stats"] = get_college_stats(college_stats_table, pid)
+      all_stats["college_stats"] = get_college_stats(college_stats_table, pid)
 
   ps = div.findAll('p')
   for p in ps:
@@ -96,24 +96,24 @@ def get_player_info(url):
       else:
         logging.warning("Unknown position {}".format(ptext))
       
-      all_stats[pid]["shoots"] = shoots
-      all_stats[pid]["position"] = position
+      all_stats["shoots"] = shoots
+      all_stats["position"] = position
     
     if "High School:" in ptext:
       hs_city = ptext[ptext.find("in\n") + 5 : ptext.find(",")]
       hs_state = ptext[ptext.rfind(' ') + 1 : -1]
-      all_stats[pid]["hs_city"] = hs_city
-      all_stats[pid]["hs_state"] = hs_state
+      all_stats["hs_city"] = hs_city
+      all_stats["hs_state"] = hs_state
 
     if "Draft:" in ptext:
       pick = ptext[ptext.find("pick, ") + 6 : ptext.rfind("overall") - 3]
       draft_year = ptext[ptext.rfind(',') + 2 : ptext.rfind(',') + 6]
-      all_stats[pid]["pick"] = pick
-      all_stats[pid]["draft_year"] = draft_year
+      all_stats["pick"] = pick
+      all_stats["draft_year"] = draft_year
     
     for a in p.findAll("a"):
       if "https://twitter.com" in a["href"]:
-        all_stats[pid]["twitter"] = a["href"].split("/")[-1]
+        all_stats["twitter"] = a["href"].split("/")[-1]
 
   set_player_stats(all_stats)
   return all_stats

@@ -34,15 +34,15 @@ def get_team_stats(url):
   response = session.get(url)
   response.html.render()
 
+  # when iterating over different tables we don't want to overwrite the
+  # team with the previous table stats, therefore use a separate key for each table
   standings = []
+  misc_stats = []
   team_stats = {}
   shooting_stats = {}
-  misc_stats = {}
 
   for table_id in table_ids:
     response_html = response.html.find("#{}".format(table_id), first=True).html
-    # f = open("{}.html".format(table_id), "r")   # DEV
-    # response_html = f.read()                    # DEV
     soup = BeautifulSoup(response_html, 'html.parser')
 
     if table_id in ["confs_standings_E", "confs_standings_W"]:
@@ -70,28 +70,33 @@ def get_team_stats(url):
           
           team_stat[data_stat] = val
 
-        standings[conference].append(team_stat)
+        standings.append(team_stat)
 
     elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      team_stats[table_id] = {}
+      team_stats[table_id] = []
+
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
         rank  = int(team.find("th", {"data-stat" : "ranker"}).text)
-        team_stats[table_id][team_name] = {"rank" : rank }
+        invididual_team_stats = { "team" : team_name, "rank" : rank }
+        if table_id not in team_stats:
+          team_stats[table_id] = []
         
         fields = team.findAll("td")
         for field in fields[1:]:
-          team_stats[table_id][team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+          invididual_team_stats[field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+        team_stats[table_id].append(invididual_team_stats)
 
+    # this creates a layer of dict keys that we don't care about...alternatively
+    # you could iterate and check by key but that's adding time
     elif table_id in ["team_shooting", "opponent_shooting"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-
         if team_name not in shooting_stats:
-          shooting_stats[team_name] = {}
-        
+          shooting_stats[team_name] = {"team": team_name}
+
         fields = team.findAll("td")
         for field in fields[1:]:
           shooting_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
@@ -100,28 +105,27 @@ def get_team_stats(url):
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-
-        if team_name not in misc_stats:
-          misc_stats[team_name] = {}
+        team_misc_stats = {"team": team_name}
         
         fields = team.findAll("td")
         for field in fields[1:]:
           text = field.text
           if field["data-stat"] == "arena_name":
-            misc_stats[team_name][field["data-stat"]] = text
+            team_misc_stats[field["data-stat"]] = text
             continue
 
           if field["data-stat"] in ["net_rtg", "attendance", "attendance_per_g"]:
             text = field.text.replace("+", "").replace(",", "")
 
-          misc_stats[team_name][field["data-stat"]] = float(text) if "." in text else int(text)
+          team_misc_stats[field["data-stat"]] = float(text) if "." in text else int(text)
+        misc_stats.append(team_misc_stats)
   
   jstandings = json.dumps(standings)
   jteam_stats = json.dumps(team_stats)
   jshooting_stats = json.dumps(shooting_stats)
   jmisc_stats = json.dumps(misc_stats)
 
-  for k, v in enumerate([jstandings, jteam_stats, jshooting_stats, jmisc_stats]):
+  for k, v in enumerate([jteam_stats, jshooting_stats, jstandings, jmisc_stats]):
     f = open("{}.json".format(k), "w+")
     f.write(v)
     f.close()
