@@ -1,16 +1,20 @@
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
+import json
 
 """
-Parsing relevant tables from: 
-https://www.basketball-reference.com/leagues/NBA_2019.html
+TODO
+- logging
+- sleeps
+- add date
+- db
 """
 
 def main():
-  # session = HTMLSession()
-  # response = session.get("https://www.basketball-reference.com/leagues/NBA_2019.html")
-  # response.html.render() # render js
+  url = "https://www.basketball-reference.com/leagues/NBA_2019.html"
+  get_team_stats(url)
 
+def get_team_stats(url):
   table_ids = [
     "confs_standings_E",
     "confs_standings_W",
@@ -23,16 +27,25 @@ def main():
     "opponent_shooting",
   ]
 
+  session = HTMLSession()
+  response = session.get(url)
+  response.html.render()
+
+  standings = {}
+  team_stats = {}
+  shooting_stats = {}
+  misc_stats = {}
+
   for table_id in table_ids:
-    # response_html = response.html.find("#{}".format(table_id), first=True).html
-    f = open("{}.html".format(table_id), "r")   # DEV
-    response_html = f.read()                    # DEV
+    response_html = response.html.find("#{}".format(table_id), first=True).html
+    # f = open("{}.html".format(table_id), "r")   # DEV
+    # response_html = f.read()                    # DEV
     soup = BeautifulSoup(response_html, 'html.parser')
-    
+
     if table_id in ["confs_standings_E", "confs_standings_W"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
       conference = "E" if table_id in "confs_standings_E" else "W"
-      standings = {conference : {}}
+      standings[conference] = {}
 
       for team in teams: 
         team_name = team.find("th", {"data-stat": "team_name"}).a["href"].split("/")[2]
@@ -55,19 +68,11 @@ def main():
 
           standings[conference][team_name][data_stat] = val
 
-      # for standing in standings:
-      #   for team in standings[standing]:
-      #     print(team, standings[standing][team])
-
-      # TODO: Store in DB
-
     elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      team_stats = { table_id : {}}
+      team_stats[table_id] = {}
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-
-        # if table_id not in 
         rank  = int(team.find("th", {"data-stat" : "ranker"}).text)
         team_stats[table_id][team_name] = {"rank" : rank }
         
@@ -75,15 +80,8 @@ def main():
         for field in fields[1:]:
           team_stats[table_id][team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
 
-      # for table_id in team_stats:
-      #   for team in team_stats[table_id]:
-      #     print(team, team_stats[table_id][team])
-
-      # TODO: Store in DB
-
     elif table_id in ["team_shooting", "opponent_shooting"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      shooting_stats = {}
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
 
@@ -96,7 +94,6 @@ def main():
 
     elif table_id == "misc_stats":
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      misc_stats = {}
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
 
@@ -114,6 +111,16 @@ def main():
             text = field.text.replace("+", "").replace(",", "")
 
           misc_stats[team_name][field["data-stat"]] = float(text) if "." in text else int(text)
+  
+  jstandings = json.dumps(standings)
+  jteam_stats = json.dumps(team_stats)
+  jshooting_stats = json.dumps(shooting_stats)
+  jmisc_stats = json.dumps(misc_stats)
+
+  for k, v in enumerate([jstandings, jteam_stats, jshooting_stats, jmisc_stats]):
+    f = open("{}.json".format(k), "w+")
+    f.write(v)
+    f.close()
 
 if __name__ == "__main__":
   main()
