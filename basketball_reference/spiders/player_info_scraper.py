@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
+import logging
 import random
+import requests
 import time
 
 """
@@ -113,7 +115,7 @@ def get_player_info(url):
       if "https://twitter.com" in a["href"]:
         all_stats[pid]["twitter"] = a["href"].split("/")[-1]
 
-  
+  set_player_stats(all_stats)
   return all_stats
 
 def get_college_stats(college_stats_table, pid):
@@ -150,12 +152,15 @@ def get_college_stats(college_stats_table, pid):
     college_stats.append(season_stat)
   return college_stats
 
-def set_player_stats():
-  pass
+def set_player_stats(player_stats):
+  jplayer_stats = json.dumps(player_stats)
+  f = open("player_stats.json", "w+")
+  f.write(jplayer_stats)
+  f.close()
 
 def main():
   logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
-  # get_player_urls()
+  get_player_info("https://www.basketball-reference.com/players/h/hardeja01.html")
 
 if __name__ == "__main__":
   main()
