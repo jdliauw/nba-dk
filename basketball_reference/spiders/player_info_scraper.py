@@ -138,10 +138,63 @@ def get_game_log(game_log_url):
       pgames = playoff_soup.find("tbody").findAll("tr")
 
       for pgame in pgames:
-        _ = get_game_stats(pgame)
+        # TODO HERE
+        print(get_game_stats(pgame))
+        break
 
-def get_game_stats():
+def get_game_stats(game):
   game_stats = {}
+
+  fields = game.findAll("td")
+  for field in fields:
+    data_stat = field["data-stat"]
+    val = field.text
+    # calculate on own, or skip
+    if data_stat in ["fg_pct", "fg3_pct", "ft_pct"] or len(val) == 0 or val == " ":
+      continue
+    if data_stat == "date_game": 
+      # 2010-04-18
+      y,m,d = val.split("-")
+      game_stats["date_year"] = int(y)
+      game_stats["date_month"] = int(m)
+      game_stats["date_day"] = int(d)
+      continue
+    elif data_stat in ["team_id", "opp_id"]:
+      game_stats[data_stat] = val
+      continue
+    elif data_stat == "age":
+      # 20-235
+      y, d = val.split("-")
+      game_stats["age_years"] = int(y)
+      game_stats["age_days"] = int(d)
+      continue
+    elif data_stat == "game_location":
+      # @
+      game_stats["home"] = True if "@" not in val else False
+      continue
+    elif data_stat == "game_result":
+      # L (-8) 
+      game_stats["won"] = True if "W" in val else False
+      game_stats["margin"] = int(val[val.find("(") + 1 : val.find(")")])
+      continue
+    elif data_stat == "mp":
+      # 16:20
+      m, s = val.split(":")
+      game_stats["minutes_played"] = int(m)
+      game_stats["seconds_played"] = int(s)
+      continue
+    elif data_stat == "gs":
+      game_stats["starter"] = True if int(val) == 1 else 0
+      continue
+    elif data_stat == "reason":
+      game_stats["reason"] = val
+      continue
+    elif "." in val:
+      game_stats[data_stat] = float(val)
+      continue
+    else:
+      game_stats[data_stat] = int(val)
+
   return game_stats
 
 
@@ -184,8 +237,6 @@ def set_player_stats(player_stats):
   f = open("player_stats.json", "w+")
   f.write(jplayer_stats)
   f.close()
-
-
 
 if __name__ == "__main__":
   main()
