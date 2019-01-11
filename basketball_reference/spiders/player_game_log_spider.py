@@ -4,19 +4,6 @@ from basketball_reference.items import SeasonLog
 from collections import OrderedDict
 from datetime import datetime
 
-"""
-This spider collects:
-    - player game log statistics by season
-    - player field goal percentage averages by distance by year
-
-It works by:
-    - providing seasons
-        - parsing player urls
-            - parsing game log urls
-                - parsing and collecting each game log
-            - parsing and collecting  avg(fg%)/distance/year
-"""
-
 class PlayerGameLogSpider(scrapy.Spider):
     name = "player_game_logs"
     home = "https://www.basketball-reference.com"

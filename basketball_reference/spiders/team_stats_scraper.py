@@ -2,19 +2,13 @@ from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 import json
 import random
-import time
-
-"""
-TODO
-- logging
-- db (add date column since we'll be scraping this daily)
-"""
+import scraper
 
 def main():
   # for year in range(1990, 2019):
   for year in [2018]:
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(year)
-    time.sleep(random.randint(3,8) + random.randint(1,100)/100)
+    scraper.sleep()
     get_team_stats(url)
 
 def get_team_stats(url):

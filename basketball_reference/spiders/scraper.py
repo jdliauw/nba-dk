@@ -1,23 +1,49 @@
 from bs4 import BeautifulSoup
+from requests_html import HTMLSession
+import random
+import time
 
-import requests
+LONG_ABBREV_DICT = {
+  "Atlanta": "ATL",
+  "Boston": "BOS",
+  "Brooklyn": "BRK",
+  "Chicago": "CHI",
+  "Charlotte": "CHO",
+  "Cleveland": "CLE",
+  "Dallas": "DAL",
+  "Denver": "DEN",
+  "Detroit": "DET",
+  "Golden State": "GSW",
+  "Houston": "HOU",
+  "Indiana": "IND",
+  "LA Clippers": "LAC",
+  "LA Lakers": "LAL",
+  "Memphis": "MEM",
+  "Miami": "MIA",
+  "Milwaukee": "MIL",
+  "Minnesota": "MIN",
+  "New Orleans": "NOP",
+  "New York": "NYK",
+  "Oklahoma City": "OKC",
+  "Orlando": "ORL",
+  "Philadelphia": "PHI",
+  "Phoenix": "PHO",
+  "Portland": "POR",
+  "Sacramento": "SAC",
+  "San Antonio": "SAS",
+  "Toronto": "TOR",
+  "Utah": "UTA",
+  "Washington": "WAS"
+}
 
-def make_soup(url):
-  url_request = requests.get(url)
-  html = url_request.text
-  soup = BeautifulSoup(html, 'html.parser')
+def get_soup(url, render=False):
+  session = HTMLSession()
+  response = session.get(url)
+  if render:
+    response.render()
+  soup = BeautifulSoup(response.text, "html.parser")
   return soup
 
-def store_html(name, url):
-  url_request = requests.get(url)
-  html = url_request.text
-  f = open("{}.html".format(name), "w+")
-  f.write(html)
-  f.close()
-
-def get_soup(name):
-  f = open("{}.html".format(name), "r")
-  html = f.read()
-  f.close()
-  soup = BeautifulSoup(html, 'html.parser')
-  return soup
+# robots.txt asks for 3s
+def sleep():
+  time.sleep(random.randint(3,8) + random.randint(1,100)/100)

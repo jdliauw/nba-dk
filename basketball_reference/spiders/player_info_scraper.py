@@ -1,25 +1,19 @@
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
+import json
 import logging
 import random
-import requests
+import scraper
 import time
 
-"""
-https://www.basketball-reference.com/leagues/NBA_2019_per_game.html
+def main():
+  # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
+  get_player_info("https://www.basketball-reference.com/players/h/hardeja01.html")
 
-import player_info_scraper
-url = "https://www.basketball-reference.com/players/h/hardeja01.html"
-stats = player_info_scraper.get_player_info(url)
-import json
-converted = json.dumps(stats)
-"""
 
 def get_player_urls(url):
-  url_request = requests.get(url)
-  html = url_request.text
-  soup = BeautifulSoup(html, 'html.parser')
+  soup = scraper.get_soup(url)
   rows = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
   urls = []
   reset = 0
@@ -40,7 +34,6 @@ def get_player_info(url):
   pid = url[url.rfind("/") + 1 : -5]
   all_stats = {"pid" : pid}
 
-  # get soup, render js
   session = HTMLSession()
   response = session.get(url)
   soup = BeautifulSoup(response.text, "html.parser")
@@ -93,8 +86,8 @@ def get_player_info(url):
         position = 4
       elif "Center" in ptext:
         position = 5
-      else:
-        logging.warning("Unknown position {}".format(ptext))
+      # else:
+        # logging.warning("Unknown position {}".format(ptext))
       
       all_stats["shoots"] = shoots
       all_stats["position"] = position
@@ -157,10 +150,6 @@ def set_player_stats(player_stats):
   f = open("player_stats.json", "w+")
   f.write(jplayer_stats)
   f.close()
-
-def main():
-  logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
-  get_player_info("https://www.basketball-reference.com/players/h/hardeja01.html")
 
 if __name__ == "__main__":
   main()
