@@ -11,16 +11,17 @@ def main():
   # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
   get_player_info("https://www.basketball-reference.com/players/h/hardeja01.html")
 
-
+# https://www.basketball-reference.com/leagues/NBA_2018_per_game.html
 def get_player_urls(url):
   soup = scraper.get_soup(url)
-  rows = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
+  players = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
   urls = []
   reset = 0
 
-  for row in rows:
-    player_stats = get_player_info(row.findAll("a")[0]["href"])
-    set_player_stats(player_stats)
+  for player in players:
+    player_url = player.findAll("a")[0]["href"]
+    player_stats = get_player_info(player_url)
+    set_player_stats(player_stats) # TODO: Remove (testing)
 
     # every 10 players sleep for a bit longer
     if reset == 10:
@@ -38,6 +39,18 @@ def get_player_info(url):
   response = session.get(url)
   soup = BeautifulSoup(response.text, "html.parser")
 
+  # GAME LOG
+  game_log_urls = soup.find("table", {"id": "per_game"}).findAll("th", {"data-stat" : "season"})
+  for game_log_url in game_log_urls:
+    atag = game_log_url.find("a") 
+    if atag is not None:
+      year = atag["href"].split("/")[-2]
+      all_stats[year] = get_game_log(atag["href"])
+
+  # SHOOTING
+  # TODO
+
+  # PLAYER BACKGROUND INFO
   div = soup.find("div", {"itemtype" : "https://schema.org/Person"})
   first, last = div.find("h1", {"itemprop": "name"}).text.split(" ", 1)
   feet, inches = div.find("span", {"itemprop" : "height"}).text.split("-", 1)
@@ -58,8 +71,7 @@ def get_player_info(url):
   all_stats["birth_city"] = birth_city
   all_stats["birth_state"] = birth_state
 
-  # college stats table is the only table of interest that is dynamically generated
-  # so let's not render the js if we don't have to since it's heavy
+  # COLLEGE STATS
   if "College" in div.text:
     response.html.render()
     college_stats_table = response.html.find("#all_college_stats", first=True)
@@ -108,8 +120,30 @@ def get_player_info(url):
       if "https://twitter.com" in a["href"]:
         all_stats["twitter"] = a["href"].split("/")[-1]
 
-  set_player_stats(all_stats)
   return all_stats
+
+def get_game_log(game_log_url):
+  session = HTMLSession()
+  response = session.get(game_log_url)
+  soup = BeautifulSoup(response.text, "html.parser")
+  playoffs = soup.find("div", {"id": "all_pgl_basic_playoffs"}) != None
+
+  # only render js if playoffs (otherwise there's no need)
+  if playoffs:
+    response.html.render()
+    playoff_table = response.html.find("#pgl_basic_playoffs", first=True)
+
+    if playoff_table is not None:
+      playoff_soup = BeautifulSoup(playoff_table.html, "html.parser")
+      pgames = playoff_soup.find("tbody").findAll("tr")
+
+      for pgame in pgames:
+        _ = get_game_stats(pgame)
+
+def get_game_stats():
+  game_stats = {}
+  return game_stats
+
 
 def get_college_stats(college_stats_table, pid):
   soup = BeautifulSoup(college_stats_table, 'html.parser')
@@ -150,6 +184,8 @@ def set_player_stats(player_stats):
   f = open("player_stats.json", "w+")
   f.write(jplayer_stats)
   f.close()
+
+
 
 if __name__ == "__main__":
   main()
