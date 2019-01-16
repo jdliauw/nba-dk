@@ -25,9 +25,9 @@ def scrape_day(month, day, year):
       base = "https://www.basketball-reference.com"
       print(base + href, base + "/boxscores/pbp/" + href.split("/")[-1])
       scrape_box_score(base + href)
-      scraper.sleep()
+      scraper.sleep(3,8)
       scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-      scraper.sleep()
+      scraper.sleep(3,8)
       break
 
 def scrape_box_score(box_score_url):

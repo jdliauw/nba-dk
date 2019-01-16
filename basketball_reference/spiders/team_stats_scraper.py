@@ -8,7 +8,7 @@ def main():
   # for year in range(1990, 2019):
   for year in [2018]:
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(year)
-    scraper.sleep()
+    scraper.sleep(3,8)
     get_team_stats(url)
 
 def get_team_stats(url):

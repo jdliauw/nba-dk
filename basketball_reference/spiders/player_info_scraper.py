@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from datetime import datetime
 from requests_html import HTMLSession
 
 import json
@@ -7,31 +8,24 @@ import random
 import scraper
 import time
 
+BASE = "https://www.basketball-reference.com"
+
 def main():
   # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
-  get_player_info("https://www.basketball-reference.com/players/h/hardeja01.html")
+  print('yolo')
 
 # https://www.basketball-reference.com/leagues/NBA_2018_per_game.html
 def get_player_urls(url):
   soup = scraper.get_soup(url)
   players = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
-  urls = []
-  reset = 0
 
   for player in players:
     player_url = player.findAll("a")[0]["href"]
     player_stats = get_player_info(player_url)
     set_player_stats(player_stats) # TODO: Remove (testing)
 
-    # every 10 players sleep for a bit longer
-    if reset == 10:
-      reset = 0
-      time.sleep(random.randint(25,35) + random.randint(1,100)/100)
-    else:
-      reset += 1
-      time.sleep(random.randint(3,8) + random.randint(1,100)/100)
-
 def get_player_info(url):
+  scraper.sleep(3,8)
   pid = url[url.rfind("/") + 1 : -5]
   all_stats = {"pid" : pid}
 
@@ -41,11 +35,12 @@ def get_player_info(url):
 
   # GAME LOG
   game_log_urls = soup.find("table", {"id": "per_game"}).findAll("th", {"data-stat" : "season"})
+  all_stats["game_logs"] = []
   for game_log_url in game_log_urls:
     atag = game_log_url.find("a") 
     if atag is not None:
       year = atag["href"].split("/")[-2]
-      all_stats[year] = get_game_log(atag["href"])
+      all_stats["game_logs"] += get_game_log(BASE + atag["href"])
 
   # SHOOTING
   # TODO
@@ -123,11 +118,21 @@ def get_player_info(url):
   return all_stats
 
 def get_game_log(game_log_url):
+  scraper.sleep(3,8)
   session = HTMLSession()
   response = session.get(game_log_url)
   soup = BeautifulSoup(response.text, "html.parser")
-  playoffs = soup.find("div", {"id": "all_pgl_basic_playoffs"}) != None
+  year_game_logs = []
 
+  # REGULAR SEASON GAMES
+  rs_games = soup.find("table", {"id": "pgl_basic"}).find("tbody").findAll("tr")
+  for rs_game in rs_games:
+    rs_game_stats = get_game_stats(rs_game, True)
+    if rs_game_stats:
+      year_game_logs.append(rs_game_stats)
+
+  # PLAYOFF GAMES
+  playoffs = soup.find("div", {"id": "all_pgl_basic_playoffs"}) != None
   # only render js if playoffs (otherwise there's no need)
   if playoffs:
     response.html.render()
@@ -138,26 +143,34 @@ def get_game_log(game_log_url):
       pgames = playoff_soup.find("tbody").findAll("tr")
 
       for pgame in pgames:
-        # TODO HERE
-        print(get_game_stats(pgame))
-        break
+        pgame_stats = get_game_stats(pgame, True)
+        if pgame_stats:
+          year_game_logs.append(pgame_stats)
+  
+  return year_game_logs
 
-def get_game_stats(game):
+def get_game_stats(game, playoffs=False):
   game_stats = {}
+  game_stats["playoffs"] = True if playoffs else False
 
   fields = game.findAll("td")
+  if len(fields) == 0:
+    return None
+
   for field in fields:
     data_stat = field["data-stat"]
     val = field.text
     # calculate on own, or skip
-    if data_stat in ["fg_pct", "fg3_pct", "ft_pct"] or len(val) == 0 or val == " ":
+    if len(val) == 0 or val == " ":
       continue
     if data_stat == "date_game": 
       # 2010-04-18
-      y,m,d = val.split("-")
-      game_stats["date_year"] = int(y)
-      game_stats["date_month"] = int(m)
-      game_stats["date_day"] = int(d)
+      game_stats["date"] = val
+      date_obj = datetime.strptime(val, "%Y-%m-%d")
+      if date_obj.month < 8:
+        game_stats["season"] = date_obj.year - 1
+      else: 
+        game_stats["season"] = date_obj.year
       continue
     elif data_stat in ["team_id", "opp_id"]:
       game_stats[data_stat] = val
@@ -171,6 +184,7 @@ def get_game_stats(game):
     elif data_stat == "game_location":
       # @
       game_stats["home"] = True if "@" not in val else False
+
       continue
     elif data_stat == "game_result":
       # L (-8) 
@@ -196,7 +210,6 @@ def get_game_stats(game):
       game_stats[data_stat] = int(val)
 
   return game_stats
-
 
 def get_college_stats(college_stats_table, pid):
   soup = BeautifulSoup(college_stats_table, 'html.parser')

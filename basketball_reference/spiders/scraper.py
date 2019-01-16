@@ -45,5 +45,5 @@ def get_soup(url, render=False):
   return soup
 
 # robots.txt asks for 3s
-def sleep():
-  time.sleep(random.randint(3,8) + random.randint(1,100)/100)
+def sleep(min_time, max_time):
+  time.sleep(random.randint(min_time, max_time) + random.randint(1,100)/100)
