@@ -44,6 +44,20 @@ def get_soup(url, render=False):
   soup = BeautifulSoup(response.text, "html.parser")
   return soup
 
+def get_type(value):
+  try:
+    value = int(value)
+  except ValueError:
+    try:
+      value = float(value)
+    except ValueError:
+      if len(value) > 0:
+        return value
+      else: 
+        return 0.0
+  return value
+
+
 # robots.txt asks for 3s
 def sleep(min_time, max_time):
   time.sleep(random.randint(min_time, max_time) + random.randint(1,100)/100)

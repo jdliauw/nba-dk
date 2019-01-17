@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from datetime import datetime, date, timedelta
 import json
 import logging
@@ -8,10 +9,7 @@ def main():
   year = yesterday.year
   month = yesterday.month
   day = yesterday.day
-
   logging.basicConfig(filename="{}-{}-{}.log".format(year, month, day), level=logging.DEBUG)
-
-  # Scrape box score / pbp
   scrape_day(month, day, year)
 
 def scrape_day(month, day, year):
@@ -23,14 +21,11 @@ def scrape_day(month, day, year):
     href = a_tag["href"]
     if "boxscore" in href and a_tag.text == 'Box Score':
       base = "https://www.basketball-reference.com"
-      print(base + href, base + "/boxscores/pbp/" + href.split("/")[-1])
       scrape_box_score(base + href)
-      scraper.sleep(3,8)
       scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-      scraper.sleep(3,8)
-      break
 
 def scrape_box_score(box_score_url):
+  scraper.sleep(3,8)
   soup = scraper.get_soup(box_score_url)
   home, away = get_teams(soup)
 
@@ -67,8 +62,9 @@ def scrape_box_score(box_score_url):
             stats.remove(stats[index])
             break
 
+        # stuff the dict with vals
         for td in tds:
-          player_stats[td["data-stat"]] = td.text
+          player_stats[td["data-stat"]] = scraper.get_type(td.text)
 
         stats.append(player_stats)
       except TypeError:
@@ -76,11 +72,12 @@ def scrape_box_score(box_score_url):
       except Exception as e:
         logging.error("Exception {} caught".format(e))
 
-  f = open("{}_{}_box_score.json".format(home, away), "w+")
+  f = open("./box_score/{}_{}_box_score.json".format(home, away), "w+")
   f.write(json.dumps(stats))
   f.close()
 
 def scrape_pbp(pbp_url):
+  scraper.sleep(3,8)
   soup = scraper.get_soup(pbp_url)
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
@@ -110,8 +107,8 @@ def scrape_pbp(pbp_url):
         # SCORES
         elif i == 3:
           away_score, home_score = td_text.split("-")
-          stat["away_score"] = away_score
-          stat["home_score"] = home_score
+          stat["away_score"] = int(away_score)
+          stat["home_score"] = int(home_score)
 
         else: # i == 0
           stat["time"] = td_text

@@ -12,9 +12,12 @@ BASE = "https://www.basketball-reference.com"
 
 def main():
   # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
-  print('yolo')
+  for year in range(1990, 2019):
+    url = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html".format(year)
+    get_player_urls(url)
 
-# https://www.basketball-reference.com/leagues/NBA_2018_per_game.html
+  # get_player_info("https://www.basketball-reference.com/players/i/irvinky01.html")
+
 def get_player_urls(url):
   soup = scraper.get_soup(url)
   players = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
@@ -22,7 +25,6 @@ def get_player_urls(url):
   for player in players:
     player_url = player.findAll("a")[0]["href"]
     player_stats = get_player_info(player_url)
-    set_player_stats(player_stats) # TODO: Remove (testing)
 
 def get_player_info(url):
   scraper.sleep(3,8)
@@ -32,6 +34,7 @@ def get_player_info(url):
   session = HTMLSession()
   response = session.get(url)
   soup = BeautifulSoup(response.text, "html.parser")
+  session.close()
 
   # GAME LOG
   game_log_urls = soup.find("table", {"id": "per_game"}).findAll("th", {"data-stat" : "season"})
@@ -57,12 +60,12 @@ def get_player_info(url):
   
   all_stats["first"] = first
   all_stats["last"] = last
-  all_stats["feet"] = feet
-  all_stats["inches"] = inches
-  all_stats["lbs"] = lbs
-  all_stats["birth_year"] = birth_year
-  all_stats["birth_month"] = birth_month
-  all_stats["birth_day"] = birth_day
+  all_stats["feet"] = int(feet)
+  all_stats["inches"] = int(inches)
+  all_stats["lbs"] = int(lbs)
+  all_stats["birth_year"] = int(birth_year)
+  all_stats["birth_month"] = int(birth_month)
+  all_stats["birth_day"] = int(birth_day)
   all_stats["birth_city"] = birth_city
   all_stats["birth_state"] = birth_state
 
@@ -108,13 +111,14 @@ def get_player_info(url):
     if "Draft:" in ptext:
       pick = ptext[ptext.find("pick, ") + 6 : ptext.rfind("overall") - 3]
       draft_year = ptext[ptext.rfind(',') + 2 : ptext.rfind(',') + 6]
-      all_stats["pick"] = pick
-      all_stats["draft_year"] = draft_year
+      all_stats["pick"] = int(pick)
+      all_stats["draft_year"] = int(draft_year)
     
     for a in p.findAll("a"):
       if "https://twitter.com" in a["href"]:
         all_stats["twitter"] = a["href"].split("/")[-1]
 
+  set_player_stats(all_stats)
   return all_stats
 
 def get_game_log(game_log_url):
@@ -137,6 +141,7 @@ def get_game_log(game_log_url):
   if playoffs:
     response.html.render()
     playoff_table = response.html.find("#pgl_basic_playoffs", first=True)
+    session.close()
 
     if playoff_table is not None:
       playoff_soup = BeautifulSoup(playoff_table.html, "html.parser")

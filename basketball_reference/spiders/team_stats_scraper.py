@@ -5,13 +5,12 @@ import random
 import scraper
 
 def main():
-  # for year in range(1990, 2019):
-  for year in [2018]:
+  for year in range(1990, 2019):
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(year)
-    scraper.sleep(3,8)
     get_team_stats(url)
 
 def get_team_stats(url):
+  scraper.sleep(3,8)
   table_ids = [
     "confs_standings_E",
     "confs_standings_W",
@@ -120,7 +119,7 @@ def get_team_stats(url):
   jmisc_stats = json.dumps(misc_stats)
 
   for k, v in enumerate([jteam_stats, jshooting_stats, jstandings, jmisc_stats]):
-    f = open("{}.json".format(k), "w+")
+    f = open("./team_stats/{}.json".format(k), "w+")
     f.write(v)
     f.close()
 
