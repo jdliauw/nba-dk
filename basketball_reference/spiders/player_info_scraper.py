@@ -256,5 +256,6 @@ def set_player_stats(player_stats):
   f.write(jplayer_stats)
   f.close()
 
+
 if __name__ == "__main__":
   main()
