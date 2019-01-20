@@ -150,13 +150,13 @@ def get_game_log(game_log_url):
       for pgame in pgames:
         pgame_stats = get_game_stats(pgame, True)
         if pgame_stats:
+          pgame_stats["playoffs"] = True
           year_game_logs.append(pgame_stats)
   
   return year_game_logs
 
 def get_game_stats(game, playoffs=False):
   game_stats = {}
-  game_stats["playoffs"] = True if playoffs else False
 
   fields = game.findAll("td")
   if len(fields) == 0:

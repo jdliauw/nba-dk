@@ -1,0 +1,27 @@
+[
+  {
+    "assister": string,
+    "away_score": int,
+    "blocker": string,
+    "drebounder": string,
+    "distance": int,
+    "ejected": string,
+    "foul_drawer": string,
+    "foul_type": string,
+    "fouler": string,
+    "full_timeout": string,
+    "home_score": int,
+    "make": bool,
+    "orebounder": string,
+    "play": string,
+    "time": ?????,
+    "shooter": string,
+    "steal": string,
+    "sub_in": string,
+    "sub_out": string,
+    "turnover": string,
+    "turnover_type": string,
+    "type": int,
+    "violation": string,
+  }
+]

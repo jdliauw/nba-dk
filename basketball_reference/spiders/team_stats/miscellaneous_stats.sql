@@ -1,0 +1,31 @@
+[
+  {
+    "team": string,
+    "age": float,
+    "wins": int,
+    "losses": int,
+    "wins_pyth": int,
+    "losses_pyth": int,
+    "mov": float,
+    "sos": float,
+    "srs": float,
+    "off_rtg": float,
+    "def_rtg": float,
+    "net_rtg": float,
+    "pace": float,
+    "fta_per_fga_pct": float,
+    "fg3a_per_fga_pct": float,
+    "ts_pct": float,
+    "efg_pct": float,
+    "tov_pct": float,
+    "orb_pct": float,
+    "ft_rate": float,
+    "opp_efg_pct": float,
+    "opp_tov_pct": float,
+    "drb_pct": float,
+    "opp_ft_rate": float,
+    "arena_name": string,
+    "attendance": int,
+    "attendance_per_g": int
+  }
+]

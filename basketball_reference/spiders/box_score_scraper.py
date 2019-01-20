@@ -140,7 +140,7 @@ def parse_play(td, stat):
     if len(a_tags) == 2:
       # extract the href from the tag, then parse the url to get the playerid 
       # example: <a href="/players/a/augusdj01.html">D. Augustin</a>
-      stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["shooter"] = a_tags[0]["href"].split("/")[-1][:-5]
       if " makes " in td_text:
         stat["assister"] = a_tags[1]["href"].split("/")[-1][:-5]
       elif " misses " in td_text:
@@ -148,7 +148,7 @@ def parse_play(td, stat):
       else:
         logging.warning("Unknown stat: {}".format(td_text))
     elif len(a_tags) == 1:
-      stat["scorer"] = a_tags[0]["href"].split("/")[-1][:-5]
+      stat["shooter"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["type"] = 1
     else:
       logging.warning("Unknown type of play: {}".format(td_text))
@@ -189,7 +189,7 @@ def parse_play(td, stat):
       elif "defensive" in td_text.lower():
         stat["drebounder"] = "team"
     else:
-      logging.warning("a_tags len of {}", len)
+      logging.warning("a_tags len of {}".format(len(td_text)))
 
   # TIMEOUT (starting 2018 season, only full)
   elif " timeout" in td_text:
@@ -266,6 +266,11 @@ def parse_play(td, stat):
   # VIOLATIONS
   elif "Violation " in td_text:
     stat["team_violation"] = "kicked ball"
+
+  elif "ejected from game" in td_text:
+    a_tags = td.findAll("a")
+    if len(a_tags) == 1:
+      stat["ejected"] = a_tags[0]["href"].split("/")[-1][:-5]
 
   # UNKNOWN
   else:
