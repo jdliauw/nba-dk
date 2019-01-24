@@ -62,9 +62,9 @@ def scrape_box_score(box_score_url):
             stats.remove(stats[index])
             break
 
-        # stuff the dict with vals
+        # stuff the dict with number vals
         for td in tds:
-          player_stats[td["data-stat"]] = scraper.get_type(td.text)
+          player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
 
         stats.append(player_stats)
       except TypeError:

@@ -44,7 +44,7 @@ def get_soup(url, render=False):
   soup = BeautifulSoup(response.text, "html.parser")
   return soup
 
-def get_type(value):
+def get_number_type(value):
   try:
     value = int(value)
   except ValueError:
@@ -57,6 +57,18 @@ def get_type(value):
         return 0.0
   return value
 
+def get_converted_type(value):
+  if "." in value:
+    value = float(value)
+  elif value == "—":
+    value = 0.0
+  else:
+    try:
+      value = int(value)
+    except:
+      if not isinstance(value, str):
+        print("WTF DUDE WHAT TYPE IS ME")
+  return value
 
 # robots.txt asks for 3s
 def sleep(min_time, max_time):

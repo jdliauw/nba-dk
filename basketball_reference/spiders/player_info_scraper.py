@@ -45,10 +45,22 @@ def get_player_info(url):
       year = atag["href"].split("/")[-2]
       all_stats["game_logs"] += get_game_log(BASE + atag["href"])
 
-  # SHOOTING
-  # TODO
+   # Need to render for shooting and college stats
+  response.html.render()
 
-  # PLAYER BACKGROUND INFO
+  # SHOOTING - RENDER REQUIRED
+  shooting_stats_table = response.html.find("#shooting", first=True)
+  if shooting_stats_table is not None:
+    shooting_stats_table = shooting_stats_table.html
+    all_stats["shooting_stats"] = get_shooting_stats(shooting_stats_table, pid)
+
+  # COLLEGE STATS - RENDER REQUIRED
+  college_stats_table = response.html.find("#all_college_stats", first=True)
+  if college_stats_table is not None:
+    college_stats_table = college_stats_table.html
+    all_stats["college_stats"] = get_college_stats(college_stats_table, pid)
+
+  # PLAYER BACKGROUND INFO - RENDER NOT REQUIRED
   div = soup.find("div", {"itemtype" : "https://schema.org/Person"})
   first, last = div.find("h1", {"itemprop": "name"}).text.split(" ", 1)
   feet, inches = div.find("span", {"itemprop" : "height"}).text.split("-", 1)
@@ -68,16 +80,6 @@ def get_player_info(url):
   all_stats["birth_day"] = int(birth_day)
   all_stats["birth_city"] = birth_city
   all_stats["birth_state"] = birth_state
-
-  # COLLEGE STATS
-  if "College" in div.text:
-    response.html.render()
-    college_stats_table = response.html.find("#all_college_stats", first=True)
-    if college_stats_table is not None: 
-      college_stats_table = college_stats_table.html
-
-      # store separately?
-      all_stats["college_stats"] = get_college_stats(college_stats_table, pid)
 
   ps = div.findAll('p')
   for p in ps:
@@ -237,18 +239,37 @@ def get_college_stats(college_stats_table, pid):
       # convert to proper type
       val = field.text
       if len(val) > 0:
-        if "." in val:
-          val = float(val)
-        elif val == "—":
-          val = 0.0
-        else:
-          val = int(val)
+        val = scraper.get_converted_type(val)
       else:
         continue
 
       season_stat[season][data_stat] = val
     college_stats.append(season_stat)
   return college_stats
+
+def get_shooting_stats(shootings_stats_table, pid):
+  soup = BeautifulSoup(shootings_stats_table, 'html.parser')
+  years = soup.find("tbody").findAll("tr")
+
+  shooting_stats = []
+  for year in years:
+    season = year.find("th").text.split("-")[0]
+    season_stat = {season: {}}
+
+    fields = year.findAll("td")
+    for field in fields:
+      data_stat = field["data-stat"]
+
+      # convert to proper type
+      val = field.text
+      if len(val) > 0:
+        val = scraper.get_converted_type(val)
+      else:
+        continue
+
+      season_stat[season][data_stat] = val
+    shooting_stats.append(season_stat)
+  return shooting_stats
 
 def set_player_stats(player_stats):
   jplayer_stats = json.dumps(player_stats)
