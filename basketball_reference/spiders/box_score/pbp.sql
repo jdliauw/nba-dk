@@ -13,7 +13,7 @@ CREATE TABLE pbp(
   make bool,
   orebounder TEXT,
   play TEXT,
-  play_time INT, /* m:ss -> seconds */
+  play_time REAL, /* m:ss:ms -> s.ms */
   play_time_raw TEXT,
   quarter INT,
   shooter TEXT,

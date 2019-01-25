@@ -77,16 +77,20 @@ def scrape_box_score(box_score_url):
   f.close()
 
 def scrape_pbp(pbp_url):
-  scraper.sleep(3,8)
+  # scraper.sleep(3,8)
   soup = scraper.get_soup(pbp_url)
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   stats = []
+  quarter = 1
 
   for tr in trs:
+    stat = {}
+    if tr.get("id") is not None:
+      quarter = int(tr.get("id")[1:])
+
     tds = tr.findAll("td")
     tds_size = len(tds)
-    stat = {}
 
     if tds_size == 6:
       for i in range(6):
@@ -110,14 +114,24 @@ def scrape_pbp(pbp_url):
           stat["away_score"] = int(away_score)
           stat["home_score"] = int(home_score)
 
-        else: # i == 0
-          stat["time"] = td_text
+        # i == 0
+        else: 
+          stat["play_time_raw"] = td_text
+          minutes, seconds = td_text.split(".")[0].split(":")
+          ms = td_text.split(".")[1]
+          seconds = float(seconds) + (float(minutes) * 60) + float(ms)
+          stat["play_time"] = seconds
 
     elif tds_size == 2:
-      stat["time"] = tds[0].text
+      stat["play_time_raw"] = tds[0].text
+      minutes, seconds = tds[0].text.split(".")[0].split(":")
+      ms = tds[0].text.split(".")[1]
+      seconds = float(seconds) + (float(minutes) * 60) + float(ms)
+      stat["play_time"] = seconds
       stat["play"] = tds[1].text
 
     if stat:
+      stat["quarter"] = quarter
       stats.append(stat)
 
   f = open("{}_{}_pbp.json".format(home, away), "w+")
