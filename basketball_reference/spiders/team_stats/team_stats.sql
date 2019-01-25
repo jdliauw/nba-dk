@@ -1,181 +1,115 @@
 CREATE TABLE team_stats(
-    date ,
-    team
-    rank
-    mp
-    fg
-    fga
-    fg_pct
-    fg3
-    fg3a
-    fg3_pct
-    fg2
-    fg2a
-    fg2_pct
-    ft
-    fta
-    ft_pct
-    orb
-    drb
-    trb
-    ast
-    stl
-    blk
-    tov
-    pf
-    pts
-
-    playerid TEXT NOT NULL,
-    season INT NOT NULL,
-    date TEXT,
-    year INT,
-    month INT,
-    day INT,
-    weekday TEXT,
-    age_years INT,
-    age_days INT,
-    home BOOLEAN,
-    team TEXT,
-    opponent TEXT,
-    game_started BOOLEAN,
-    seconds_played INT,
-    field_goals_made INT,
-    field_goals_attempted INT,
-    field_goals_percentage REAL,
-    threes_made INT,
-    threes_attempted INT,
-    threes_percentage REAL,
-    free_throws_made INT, 
-    free_throws_attempted INT, 
-    free_throws_percentage REAL,
-    offensive_rebounds INT,
-    defensive_rebounds INT,
-    total_rebounds INT,
-    assists INT,
-    steals INT,
-    blocks INT,
-    turnovers INT, 
-    personal_fouls INT,
-    points INT,
-    game_score REAL,
-    plus_minus REAL
+  collected_date DATE,
+  team TEXT,
+  rank INT,
+  g INT,
+  mp INT,
+  fg INT,
+  fga INT,
+  fg_pct REAL,
+  fg3 INT,
+  fg3a INT,
+  fg3_pct REAL,
+  fg2 INT,
+  fg2a INT,
+  fg2_pct REAL,
+  ft INT,
+  fta INT,
+  ft_pct REAL,
+  orb INT,
+  drb INT,
+  trb INT,
+  ast INT,
+  stl INT,
+  blk INT,
+  tov INT,
+  pf INT,
+  pts INT
 );
 
-{
-  "team-stats-base": [
-    {
-      "team": string,
-      "rank": int,
-      "g": int,
-      "mp": int,
-      "fg": int,
-      "fga": int,
-      "fg_pct": float,
-      "fg3": int,
-      "fg3a": int,
-      "fg3_pct": float,
-      "fg2": int,
-      "fg2a": int,
-      "fg2_pct": float,
-      "ft": int,
-      "fta": int,
-      "ft_pct": float,
-      "orb": int,
-      "drb": int,
-      "trb": int,
-      "ast": int,
-      "stl": int,
-      "blk": int,
-      "tov": int,
-      "pf": int,
-      "pts": int
-    }
-  ],
-  "opponent-stats-base": [
-    {
-      "team": string,
-      "rank": int,
-      "g": int,
-      "mp": int,
-      "opp_fg": int,
-      "opp_fga": int,
-      "opp_fg_pct": float,
-      "opp_fg3": int,
-      "opp_fg3a": int,
-      "opp_fg3_pct": float,
-      "opp_fg2": int,
-      "opp_fg2a": int,
-      "opp_fg2_pct": float,
-      "opp_ft": int,
-      "opp_fta": int,
-      "opp_ft_pct": float,
-      "opp_orb": int,
-      "opp_drb": int,
-      "opp_trb": int,
-      "opp_ast": int,
-      "opp_stl": int,
-      "opp_blk": int,
-      "opp_tov": int,
-      "opp_pf": int,
-      "opp_pts": int
-    }
-  ],
-  "team-stats-per_poss": [
-    {
-      "team": string,
-      "rank" int,
-      "g": int,
-      "mp": int,
-      "fg": float,
-      "fga": float,
-      "fg_pct": float,
-      "fg3": float,
-      "fg3a": float,
-      "fg3_pct": float,
-      "fg2": float,
-      "fg2a": float,
-      "fg2_pct": float,
-      "ft": float,
-      "fta": float,
-      "ft_pct": float,
-      "orb": float,
-      "drb": float,
-      "trb": float,
-      "ast": float,
-      "stl": float,
-      "blk": float,
-      "tov": float,
-      "pf": float,
-      "pts": float,
-    }
-  ],
-  "opponent-stats-per_poss": [
-    {
-      "team": string,
-      "rank": int,
-      "g": int,
-      "mp": int,
-      "opp_fg": float,
-      "opp_fga": float,
-      "opp_fg_pct": float,
-      "opp_fg3": float,
-      "opp_fg3a": float,
-      "opp_fg3_pct": float,
-      "opp_fg2": float,
-      "opp_fg2a": float,
-      "opp_fg2_pct": float,
-      "opp_ft": float,
-      "opp_fta": float,
-      "opp_ft_pct": float,
-      "opp_orb": float,
-      "opp_drb": float,
-      "opp_trb": float,
-      "opp_ast": float,
-      "opp_stl": float,
-      "opp_blk": float,
-      "opp_tov": float,
-      "opp_pf": float,
-      "opp_pts": float,
-    }
-  ]
-}
+CREATE TABLE opp_stats(
+  collected_date DATE,
+  team TEXT,
+  rank INT,
+  g INT,
+  mp INT,
+  opp_fg INT,
+  opp_fga INT,
+  opp_fg_pct REAL,
+  opp_fg3 INT,
+  opp_fg3a INT,
+  opp_fg3_pct REAL,
+  opp_fg2 INT,
+  opp_fg2a INT,
+  opp_fg2_pct REAL,
+  opp_ft INT,
+  opp_fta INT,
+  opp_ft_pct REAL,
+  opp_orb INT,
+  opp_drb INT,
+  opp_trb INT,
+  opp_ast INT,
+  opp_stl INT,
+  opp_blk INT,
+  opp_tov INT,
+  opp_pf INT,
+  opp_pts INT
+);
+
+CREATE TABLE team_stats_per_possession(
+  collected_date DATE,
+  team TEXT,
+  rank INT,
+  g INT,
+  mp INT,
+  fg INT,
+  fga INT,
+  fg_pct REAL,
+  fg3 INT,
+  fg3a INT,
+  fg3_pct REAL,
+  fg2 INT,
+  fg2a INT,
+  fg2_pct REAL,
+  ft INT,
+  fta INT,
+  ft_pct REAL,
+  orb INT,
+  drb INT,
+  trb INT,
+  ast INT,
+  stl INT,
+  blk INT,
+  tov INT,
+  pf INT,
+  pts INT
+);
+
+CREATE TABLE opp_stats_per_possession(
+  collected_date DATE,
+  team TEXT,
+  rank INT,
+  g INT,
+  mp INT,
+  opp_fg INT,
+  opp_fga INT,
+  opp_fg_pct REAL,
+  opp_fg3 INT,
+  opp_fg3a INT,
+  opp_fg3_pct REAL,
+  opp_fg2 INT,
+  opp_fg2a INT,
+  opp_fg2_pct REAL,
+  opp_ft INT,
+  opp_fta INT,
+  opp_ft_pct REAL,
+  opp_orb INT,
+  opp_drb INT,
+  opp_trb INT,
+  opp_ast INT,
+  opp_stl INT,
+  opp_blk INT,
+  opp_tov INT,
+  opp_pf INT,
+  opp_pts INT
+);
