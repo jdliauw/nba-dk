@@ -12,7 +12,7 @@ BASE = "https://www.basketball-reference.com"
 
 def main():
   # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
-  for year in range(1990, 2019):
+  for year in range(2018, 2019):
     url = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html".format(year)
     get_player_urls(url)
 
@@ -32,7 +32,12 @@ def get_player_info(url):
   all_stats = {"pid" : pid}
 
   session = HTMLSession()
-  response = session.get(url)
+  response = session.get(url, timeout=5)
+
+  if response.status_code != 200:
+    # LOG ERROR
+    return
+
   soup = BeautifulSoup(response.text, "html.parser")
   session.close()
 
@@ -126,7 +131,12 @@ def get_player_info(url):
 def get_game_log(game_log_url):
   scraper.sleep(3,8)
   session = HTMLSession()
-  response = session.get(game_log_url)
+  response = session.get(game_log_url, timeout=5)
+
+  if response.status_code != 200:
+    # LOG ERROR
+    return
+
   soup = BeautifulSoup(response.text, "html.parser")
   year_game_logs = []
 

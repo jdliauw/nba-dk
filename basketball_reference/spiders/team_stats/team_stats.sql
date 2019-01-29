@@ -1,6 +1,6 @@
 CREATE TABLE team_stats(
-  collected_date DATE, /* PRIMARY */
-  team TEXT,           /* PRIMARY */
+  collected_date DATE NOT NULL, /* PRIMARY */
+  team TEXT NOT NULL,           /* PRIMARY */
   rank INT,
   g INT,
   mp INT,
@@ -51,8 +51,8 @@ CREATE TABLE team_stats(
 );
 
 CREATE TABLE team_stats_per_possession(
-  collected_date DATE,
-  team TEXT,
+  collected_date DATE NOT NULL,
+  team TEXT NOT NULL,
   rank INT,
   g INT,
   mp INT,

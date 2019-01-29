@@ -15,6 +15,9 @@ def main():
 def scrape_day(month, day, year):
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
   soup = scraper.get_soup(url)
+  if soup is None:
+    # LOG
+    return
 
   a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
   for a_tag in a_tags:
@@ -27,6 +30,9 @@ def scrape_day(month, day, year):
 def scrape_box_score(box_score_url):
   scraper.sleep(3,8)
   soup = scraper.get_soup(box_score_url)
+  if soup is None:
+    # LOG
+    return
   home, away = get_teams(soup)
 
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
@@ -79,6 +85,9 @@ def scrape_box_score(box_score_url):
 def scrape_pbp(pbp_url):
   scraper.sleep(3,8)
   soup = scraper.get_soup(pbp_url)
+  if soup is None:
+    # LOG
+    return
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   stats = []

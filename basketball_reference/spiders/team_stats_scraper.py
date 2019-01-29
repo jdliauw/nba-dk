@@ -24,7 +24,10 @@ def get_team_stats(url):
   ]
 
   session = HTMLSession()
-  response = session.get(url)
+  response = session.get(url, timeout=5)
+  if response.status_code != 200:
+    # LOG error
+    print("")
   response.html.render()
 
   # when iterating over different tables we don't want to overwrite the

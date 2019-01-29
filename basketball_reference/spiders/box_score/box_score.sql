@@ -1,6 +1,6 @@
 CREATE TABLE box_score(
-  game_date DATE, /* PRIMARY */
-  pid TEXT,       /* PRIMARY */
+  game_date DATE NOT NULL, /* PRIMARY */
+  pid TEXT NOT NULL,       /* PRIMARY */
   starter BOOLEAN,
   team TEXT,
   mp TEXT,

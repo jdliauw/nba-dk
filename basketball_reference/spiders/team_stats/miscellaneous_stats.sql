@@ -1,6 +1,6 @@
 CREATE TABLE misc_stats(
-  collected_date DATE, /* PRIMARY */
-  team TEXT,           /* PRIMARY */
+  collected_date DATE NOT NULL, /* PRIMARY */
+  team TEXT NOT NULL,           /* PRIMARY */
   age REAL,
   wins INT,
   losses INT,

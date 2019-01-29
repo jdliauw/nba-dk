@@ -1,5 +1,10 @@
-DOCKER
+SCRAPING BEST PRACTICES
+- Set headers (requests_html does)
+- Add timeout for gets (or will retry)
+- Check for 200 status code
+- Handle exceptions (with logging)
 
+DOCKER
 - Pull 
   docker pull [name]
 - List images
@@ -14,6 +19,8 @@ DOCKER
   docker exec -t postgres_db_1 pg_dumpall -c -U postgres > dump.sql
 - Restore db
   cat your_dump.sql | docker exec -i your-db-container psql -U postgres
+  Add sql table to nba database
+  cat ./sql/box_score.sql | docker exec -i postgres_db_1 psql -U postgres -d nba
 
 PSQL
 - Format to auto expand

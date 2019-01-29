@@ -1,6 +1,6 @@
 CREATE TABLE player_info(
-  pid TEXT PRIMARY KEY, /* PRIMARY */
-  first_name TEXT,
+  pid TEXT PRIMARY KEY NOT NULL, /* PRIMARY */
+  first_name TEXT NOT NULL,
   last_name TEXT,
   feet INT,
   inches INT,
@@ -20,15 +20,15 @@ CREATE TABLE player_info(
 );
 
 CREATE TABLE game_logs(
-  pid TEXT,       /* PRIMARY */
-  playoffs BOOLEAN,
-  game_season INT,
-  game_date DATE, /* PRIMARY */
-  season INT,
+  pid TEXT NOT NULL,       /* PRIMARY */
+  playoffs BOOLEAN NOT NULL,
+  game_season INT NOT NULL,
+  game_date DATE NOT NULL, /* PRIMARY */
+  season INT NOT NULL,
   age_years INT,
   age_days INT,
-  team_id TEXT,
-  opp_id TEXT,
+  team_id TEXT NOT NULL,
+  opp_id TEXT NOT NULL,
   won BOOLEAN,
   margin INT,
   starter BOOLEAN,
@@ -59,10 +59,10 @@ CREATE TABLE game_logs(
 );
 
 CREATE TABLE college_stats(
-  pid TEXT,     /* PRIMARY */
-  year INT,     /* PRIMARY */
+  pid TEXT NOT NULL,     /* PRIMARY */
+  year INT,              /* PRIMARY */
   age INT,
-  college TEXT, /* PRIMARY */
+  college TEXT NOT NULL, /* PRIMARY */
   g INT,
   mp INT,
   fg INT,

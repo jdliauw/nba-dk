@@ -38,7 +38,9 @@ LONG_ABBREV_DICT = {
 
 def get_soup(url, render=False):
   session = HTMLSession()
-  response = session.get(url)
+  response = session.get(url,timeout=5)
+  if response.status_code != 200:
+    return None
   if render:
     response.render()
   soup = BeautifulSoup(response.text, "html.parser")

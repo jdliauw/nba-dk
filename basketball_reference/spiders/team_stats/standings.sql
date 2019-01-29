@@ -1,5 +1,5 @@
 CREATE TABLE standings(
-  collected_date DATE PRIMARY KEY, /* PRIMARY */
+  collected_date DATE PRIMARY KEY NOT NULL, /* PRIMARY */
   team TEXT,
   conference TEXT,
   seed INT,

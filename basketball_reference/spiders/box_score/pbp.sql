@@ -1,6 +1,6 @@
 CREATE TABLE pbp(
-  id SERIAL,      /* PRIMARY */
-  game_date DATE, /* PRIMARY */
+  id SERIAL NOT NULL,      /* PRIMARY */
+  game_date DATE NOT NULL, /* PRIMARY */
   assister TEXT,
   away_score INT,
   blocker TEXT,
@@ -16,8 +16,8 @@ CREATE TABLE pbp(
   make bool,
   orebounder TEXT,
   play TEXT,
-  play_time REAL,
-  play_time_raw TEXT,
+  play_time REAL NOT NULL,
+  play_time_raw TEXT NOT NULL,
   quarter INT,
   shooter TEXT,
   steal TEXT,
