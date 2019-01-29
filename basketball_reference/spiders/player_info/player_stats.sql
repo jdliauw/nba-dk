@@ -1,5 +1,5 @@
 CREATE TABLE player_info(
-  pid TEXT,
+  pid TEXT PRIMARY KEY, /* PRIMARY */
   first_name TEXT,
   last_name TEXT,
   feet INT,
@@ -20,10 +20,10 @@ CREATE TABLE player_info(
 );
 
 CREATE TABLE game_logs(
-  pid TEXT,
+  pid TEXT,       /* PRIMARY */
   playoffs BOOLEAN,
   game_season INT,
-  game_date DATE,
+  game_date DATE, /* PRIMARY */
   season INT,
   age_years INT,
   age_days INT,
@@ -54,13 +54,15 @@ CREATE TABLE game_logs(
   pts INT,
   game_score REAL,
   plus_minus INT,
-  reason TEXT
+  reason TEXT,
+  PRIMARY KEY (pid, game_date)
 );
 
 CREATE TABLE college_stats(
-  year INT,
+  pid TEXT,     /* PRIMARY */
+  year INT,     /* PRIMARY */
   age INT,
-  college TEXT,
+  college TEXT, /* PRIMARY */
   g INT,
   mp INT,
   fg INT,
@@ -83,5 +85,6 @@ CREATE TABLE college_stats(
   mp_per_g REAL,
   pts_per_g REAL,
   trb_per_g REAL,
-  ast_per_g REAL
+  ast_per_g REAL,
+  PRIMARY KEY (pid, year, college)
 );

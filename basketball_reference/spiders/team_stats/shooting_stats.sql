@@ -1,6 +1,6 @@
 CREATE TABLE shooting_stats(
-  collected_date DATE,
-  team TEXT,
+  collected_date DATE, /* PRIMARY */
+  team TEXT,           /* PRIMARY */
   g INT,
   mp INT,
   fg_pct REAL,
@@ -49,5 +49,6 @@ CREATE TABLE shooting_stats(
   opp_fg2_layup INT,
   opp_fg3_pct_ast REAL,
   opp_pct_fg3a_corner REAL,
-  opp_fg3_pct_corner REAL
+  opp_fg3_pct_corner REAL,
+  PRIMARY KEY (collected_date, team)
 );

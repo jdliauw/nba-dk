@@ -77,7 +77,7 @@ def scrape_box_score(box_score_url):
   f.close()
 
 def scrape_pbp(pbp_url):
-  # scraper.sleep(3,8)
+  scraper.sleep(3,8)
   soup = scraper.get_soup(pbp_url)
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
@@ -163,13 +163,13 @@ def parse_play(td, stat):
         logging.warning("Unknown stat: {}".format(td_text))
     elif len(a_tags) == 1:
       stat["shooter"] = a_tags[0]["href"].split("/")[-1][:-5]
-      stat["type"] = 1
+      stat["fg_type"] = 1
     else:
       logging.warning("Unknown type of play: {}".format(td_text))
 
     # free throws are points scored but do not have "-pt"
     if "-pt" in td_text:
-      stat["type"] = int(td_text[td_text.find("-pt")-1 : td_text.find("-pt")])
+      stat["fg_type"] = int(td_text[td_text.find("-pt")-1 : td_text.find("-pt")])
 
       key_offset = [("jump shot from ", 15),
                     ("hook shot from ", 15),

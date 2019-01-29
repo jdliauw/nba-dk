@@ -1,6 +1,6 @@
 CREATE TABLE misc_stats(
-  collected_date DATE,
-  team TEXT,
+  collected_date DATE, /* PRIMARY */
+  team TEXT,           /* PRIMARY */
   age REAL,
   wins INT,
   losses INT,
@@ -26,5 +26,6 @@ CREATE TABLE misc_stats(
   opp_ft_rate REAL,
   arena_name TEXT,
   attendance INT,
-  attendance_per_g INT
+  attendance_per_g INT,
+  PRIMARY KEY (collected_date, team)
 );

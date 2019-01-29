@@ -1,6 +1,6 @@
 CREATE TABLE team_stats(
-  collected_date DATE,
-  team TEXT,
+  collected_date DATE, /* PRIMARY */
+  team TEXT,           /* PRIMARY */
   rank INT,
   g INT,
   mp INT,
@@ -24,15 +24,8 @@ CREATE TABLE team_stats(
   blk INT,
   tov INT,
   pf INT,
-  pts INT
-);
-
-CREATE TABLE opp_stats(
-  collected_date DATE,
-  team TEXT,
-  rank INT,
-  g INT,
-  mp INT,
+  pts INT,
+  orank INT,
   opp_fg INT,
   opp_fga INT,
   opp_fg_pct REAL,
@@ -53,7 +46,8 @@ CREATE TABLE opp_stats(
   opp_blk INT,
   opp_tov INT,
   opp_pf INT,
-  opp_pts INT
+  opp_pts INT,
+  PRIMARY KEY (collected_date, team)
 );
 
 CREATE TABLE team_stats_per_possession(
@@ -82,15 +76,8 @@ CREATE TABLE team_stats_per_possession(
   blk INT,
   tov INT,
   pf INT,
-  pts INT
-);
-
-CREATE TABLE opp_stats_per_possession(
-  collected_date DATE,
-  team TEXT,
-  rank INT,
-  g INT,
-  mp INT,
+  pts INT,
+  orank INT,
   opp_fg INT,
   opp_fga INT,
   opp_fg_pct REAL,
@@ -111,5 +98,6 @@ CREATE TABLE opp_stats_per_possession(
   opp_blk INT,
   opp_tov INT,
   opp_pf INT,
-  opp_pts INT
+  opp_pts INT,
+  PRIMARY KEY (collected_date, team)
 );

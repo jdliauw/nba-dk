@@ -1,5 +1,6 @@
 CREATE TABLE box_score(
-  id TEXT,
+  game_date DATE, /* PRIMARY */
+  pid TEXT,       /* PRIMARY */
   starter BOOLEAN,
   team TEXT,
   mp TEXT,
@@ -36,5 +37,6 @@ CREATE TABLE box_score(
   usg_pct REAL,
   off_rtg INT,
   def_rtg INT,
-  reason TEXT
+  reason TEXT,
+  PRIMARY KEY (game_date, pid)
 );
