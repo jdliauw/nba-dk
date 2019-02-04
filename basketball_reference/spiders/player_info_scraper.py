@@ -64,6 +64,18 @@ def get_player_info(url):
   if college_stats_table is not None:
     college_stats_table = college_stats_table.html
     all_stats["college_stats"] = get_college_stats(college_stats_table, pid)
+  
+  # SALARIES
+  salaries_table = response.html.find("#all_salaries", first=True)
+  if salaries_table is not None:
+    salaries_table = salaries_table.html
+    all_stats["salaries"] = get_salaries(salaries_table, pid)
+  
+  # CONTRACTS
+  contracts_table = response.html.find("table[id^='contracts']", first=True)
+  if contracts_table is not None:
+    contracts_table = contracts_table.html
+    all_stats["contracts"] = get_contracts(contracts_table, pid)
 
   # PLAYER BACKGROUND INFO - RENDER NOT REQUIRED
   div = soup.find("div", {"itemtype" : "https://schema.org/Person"})
@@ -127,7 +139,7 @@ def get_player_info(url):
       if "https://twitter.com" in a["href"]:
         all_stats["player_info"]["twitter"] = a["href"].split("/")[-1]
 
-  # set_player_stats(all_stats)
+  set_player_stats(all_stats)
   return all_stats
 
 def get_game_log(game_log_url, pid):
@@ -188,9 +200,9 @@ def get_game_stats(game, pid):
       game_stats["game_date"] = datetime.strptime(val, "%Y-%m-%d").strftime("%Y%m%d")
       date_obj = datetime.strptime(val, "%Y-%m-%d")
       if date_obj.month < 8:
-        game_stats["season"] = date_obj.year - 1
-      else: 
         game_stats["season"] = date_obj.year
+      else: 
+        game_stats["season"] = date_obj.year + 1
       continue
     elif data_stat in ["team_id", "opp_id"]:
       game_stats[data_stat] = val
@@ -237,7 +249,7 @@ def get_college_stats(college_stats_table, pid):
 
   college_stats = []
   for year in years:
-    season = year.find("th").text.split("-")[0]
+    season = int(year.find("th").text.split("-")[0]) + 1
     season_stat = {"season": season, "pid": pid}
 
     fields = year.findAll("td")
@@ -260,13 +272,52 @@ def get_college_stats(college_stats_table, pid):
     college_stats.append(season_stat)
   return college_stats
 
+def get_salaries(salaries_table, pid):
+  soup = BeautifulSoup(salaries_table, 'html.parser')
+  years = soup.find("tbody").findAll("tr")
+
+  salaries = []
+  for year in years:
+    season = int(year.find("th").text.split("-")[0]) + 1
+    season_salary = {"season": season, "pid": pid}
+
+    fields = year.findAll("td")
+    for field in fields:
+      data_stat = field["data-stat"]
+
+      if data_stat == "team_name":
+        team = field.find("a")["href"].split("/")[2]
+        season_salary["team"] = team
+      elif data_stat == "salary":
+        season_salary["salary"] = field["csk"]
+
+    salaries.append(season_salary)
+  return salaries
+
+def get_contracts(contracts_table, pid):
+  soup = BeautifulSoup(contracts_table, 'html.parser')
+  cols = soup.find("thead").findAll("th")
+  vals = soup.find("tbody").findAll("td")
+  contracts = []
+  if len(cols) == len(vals):
+    for col, val in zip(cols, vals):
+      contract = {}
+      if col["data-stat"].lower() != "team":
+        year = int(col["data-stat"][:4]) + 1
+        salary = int(val.text.replace("$", "").replace(",", ""))
+        contract[year] = salary
+      else:
+        contract["team"] = val.find("a")["href"].split("/")[2].replace(".html", "")
+      contracts.append(contract)
+  return contracts
+
 def get_shooting_stats(shootings_stats_table, pid):
   soup = BeautifulSoup(shootings_stats_table, 'html.parser')
   years = soup.find("tbody").findAll("tr")
 
   shooting_stats = []
   for year in years:
-    season = int(year.find("th").text.split("-")[0])
+    season = int(year.find("th").text.split("-")[0]) + 1
     season_stat = {"season": season, "pid" : pid}
 
     fields = year.findAll("td")
