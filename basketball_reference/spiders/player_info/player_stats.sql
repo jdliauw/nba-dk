@@ -1,29 +1,40 @@
-CREATE TABLE player_info(
-  pid TEXT PRIMARY KEY NOT NULL, /* PRIMARY */
-  first_name TEXT NOT NULL,
-  last_name TEXT,
-  feet INT,
-  inches INT,
-  lbs INT,
-  birth_year INT,
-  birth_month INT,
-  birth_day INT,
-  birth_city TEXT,
-  birth_state TEXT,
-  twitter TEXT,
-  shoots TEXT,
-  position INT,
-  hs_city TEXT,
-  hs_state TEXT,
-  pick INT,
-  draft_year INT
+CREATE TABLE college_stats
+(
+  pid TEXT NOT NULL,     /* PRIMARY */
+  year INT,              /* PRIMARY */
+  college TEXT NOT NULL, /* PRIMARY */
+  age INT,
+  g INT,
+  mp INT,
+  fg INT,
+  fga INT,
+  fg3 INT,
+  fg3a INT,
+  ft INT,
+  fta INT,
+  orb INT,
+  trb INT,
+  ast INT,
+  stl INT,
+  blk INT,
+  tov INT,
+  pf INT,
+  pts INT,
+  fg_pct REAL,
+  fg3_pct REAL,
+  ft_pct REAL,
+  mp_per_g REAL,
+  pts_per_g REAL,
+  trb_per_g REAL,
+  ast_per_g REAL,
+  PRIMARY KEY (pid, year, college)
 );
 
 CREATE TABLE game_logs(
   pid TEXT NOT NULL,       /* PRIMARY */
+  game_date DATE NOT NULL, /* PRIMARY */
   playoffs BOOLEAN NOT NULL,
   game_season INT NOT NULL,
-  game_date DATE NOT NULL, /* PRIMARY */
   season INT NOT NULL,
   age_years INT,
   age_days INT,
@@ -58,33 +69,58 @@ CREATE TABLE game_logs(
   PRIMARY KEY (pid, game_date)
 );
 
-CREATE TABLE college_stats(
-  pid TEXT NOT NULL,     /* PRIMARY */
-  year INT,              /* PRIMARY */
+CREATE TABLE player_info
+(
+  pid TEXT PRIMARY KEY NOT NULL, /* PRIMARY */
+  first_name TEXT NOT NULL,
+  last_name TEXT,
+  feet INT,
+  inches INT,
+  lbs INT,
+  birth_year INT,
+  birth_month INT,
+  birth_day INT,
+  birth_city TEXT,
+  birth_state TEXT,
+  twitter TEXT,
+  shoots TEXT,
+  position INT,
+  hs_city TEXT,
+  hs_state TEXT,
+  pick INT,
+  draft_year INT
+);
+
+CREATE TABLE player_shooting_stats(
+  season INT NOT NULL, /* PRIMARY KEY */
+  pid TEXT NOT NULL,   /* PRIMARY KEY */
   age INT,
-  college TEXT NOT NULL, /* PRIMARY */
+  team_id TEXT,
+  lg_id TEXT,
+  pos TEXT,
   g INT,
   mp INT,
-  fg INT,
-  fga INT,
-  fg3 INT,
-  fg3a INT,
-  ft INT,
-  fta INT,
-  orb INT,
-  trb INT,
-  ast INT,
-  stl INT,
-  blk INT,
-  tov INT,
-  pf INT,
-  pts INT,
   fg_pct REAL,
+  avg_dist REAL,
+  fg2a_pct_fga REAL,
+  pct_fga_00_03 REAL,
+  pct_fga_03_10 REAL,
+  pct_fga_10_16 REAL,
+  pct_fga_16_xx REAL,
+  fg3a_pct_fga REAL,
+  fg2_pct REAL,
+  fg_pct_00_03 REAL,
+  fg_pct_03_10 REAL,
+  fg_pct_10_16 REAL,
+  fg_pct_16_xx REAL,
   fg3_pct REAL,
-  ft_pct REAL,
-  mp_per_g REAL,
-  pts_per_g REAL,
-  trb_per_g REAL,
-  ast_per_g REAL,
-  PRIMARY KEY (pid, year, college)
+  fg2_pct_ast REAL,
+  pct_fg2_dunk REAL,
+  fg2_dunk INT,
+  fg3_pct_ast REAL,
+  pct_fg3a_corner REAL,
+  fg3_pct_corner REAL,
+  fg3a_heave INT,
+  fg3_heave INT,
+  PRIMARY KEY(pid, game_date)
 );

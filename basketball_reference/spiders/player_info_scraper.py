@@ -16,8 +16,6 @@ def main():
     url = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html".format(year)
     get_player_urls(url)
 
-  # get_player_info("https://www.basketball-reference.com/players/i/irvinky01.html")
-
 def get_player_urls(url):
   soup = scraper.get_soup(url)
   players = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
@@ -26,10 +24,12 @@ def get_player_urls(url):
     player_url = player.findAll("a")[0]["href"]
     player_stats = get_player_info(player_url)
 
+# https://www.basketball-reference.com/players/m/mitchdo01.html
+# 2 pro, college, seasons, playoffs
 def get_player_info(url):
   scraper.sleep(3,8)
   pid = url[url.rfind("/") + 1 : -5]
-  all_stats = {"pid" : pid}
+  all_stats = {}
 
   session = HTMLSession()
   response = session.get(url, timeout=5)
@@ -48,7 +48,7 @@ def get_player_info(url):
     atag = game_log_url.find("a") 
     if atag is not None:
       year = atag["href"].split("/")[-2]
-      all_stats["game_logs"] += get_game_log(BASE + atag["href"])
+      all_stats["game_logs"] += get_game_log(BASE + atag["href"], pid)
 
    # Need to render for shooting and college stats
   response.html.render()
@@ -57,7 +57,7 @@ def get_player_info(url):
   shooting_stats_table = response.html.find("#shooting", first=True)
   if shooting_stats_table is not None:
     shooting_stats_table = shooting_stats_table.html
-    all_stats["shooting_stats"] = get_shooting_stats(shooting_stats_table, pid)
+    all_stats["player_shooting_stats"] = get_shooting_stats(shooting_stats_table, pid)
 
   # COLLEGE STATS - RENDER REQUIRED
   college_stats_table = response.html.find("#all_college_stats", first=True)
@@ -75,16 +75,17 @@ def get_player_info(url):
   birth_city = birth_place[birth_place.find("in\xa0") + 3 : birth_place.find(",")]
   birth_state = birth_place[birth_place.find(',') + 2 :]
   
-  all_stats["first"] = first
-  all_stats["last"] = last
-  all_stats["feet"] = int(feet)
-  all_stats["inches"] = int(inches)
-  all_stats["lbs"] = int(lbs)
-  all_stats["birth_year"] = int(birth_year)
-  all_stats["birth_month"] = int(birth_month)
-  all_stats["birth_day"] = int(birth_day)
-  all_stats["birth_city"] = birth_city
-  all_stats["birth_state"] = birth_state
+  all_stats["player_info"] = {"pid" : pid }
+  all_stats["player_info"]["first"] = first
+  all_stats["player_info"]["last"] = last
+  all_stats["player_info"]["feet"] = int(feet)
+  all_stats["player_info"]["inches"] = int(inches)
+  all_stats["player_info"]["lbs"] = int(lbs)
+  all_stats["player_info"]["birth_year"] = int(birth_year)
+  all_stats["player_info"]["birth_month"] = int(birth_month)
+  all_stats["player_info"]["birth_day"] = int(birth_day)
+  all_stats["player_info"]["birth_city"] = birth_city
+  all_stats["player_info"]["birth_state"] = birth_state
 
   ps = div.findAll('p')
   for p in ps:
@@ -106,29 +107,30 @@ def get_player_info(url):
       # else:
         # logging.warning("Unknown position {}".format(ptext))
       
-      all_stats["shoots"] = shoots
-      all_stats["position"] = position
+      all_stats["player_info"]["shoots"] = shoots
+      all_stats["player_info"]["position"] = position
     
     if "High School:" in ptext:
       hs_city = ptext[ptext.find("in\n") + 5 : ptext.find(",")]
-      hs_state = ptext[ptext.rfind(' ') + 1 : -1]
-      all_stats["hs_city"] = hs_city
-      all_stats["hs_state"] = hs_state
+
+      hs_state = ptext[ptext.find(",") + 1 : -1 ].lstrip()
+      all_stats["player_info"]["hs_city"] = hs_city
+      all_stats["player_info"]["hs_state"] = hs_state
 
     if "Draft:" in ptext:
       pick = ptext[ptext.find("pick, ") + 6 : ptext.rfind("overall") - 3]
       draft_year = ptext[ptext.rfind(',') + 2 : ptext.rfind(',') + 6]
-      all_stats["pick"] = int(pick)
-      all_stats["draft_year"] = int(draft_year)
+      all_stats["player_info"]["pick"] = int(pick)
+      all_stats["player_info"]["draft_year"] = int(draft_year)
     
     for a in p.findAll("a"):
       if "https://twitter.com" in a["href"]:
-        all_stats["twitter"] = a["href"].split("/")[-1]
+        all_stats["player_info"]["twitter"] = a["href"].split("/")[-1]
 
-  set_player_stats(all_stats)
+  # set_player_stats(all_stats)
   return all_stats
 
-def get_game_log(game_log_url):
+def get_game_log(game_log_url, pid):
   scraper.sleep(3,8)
   session = HTMLSession()
   response = session.get(game_log_url, timeout=5)
@@ -143,7 +145,7 @@ def get_game_log(game_log_url):
   # REGULAR SEASON GAMES
   rs_games = soup.find("table", {"id": "pgl_basic"}).find("tbody").findAll("tr")
   for rs_game in rs_games:
-    rs_game_stats = get_game_stats(rs_game, True)
+    rs_game_stats = get_game_stats(rs_game, pid)
     if rs_game_stats:
       year_game_logs.append(rs_game_stats)
 
@@ -160,20 +162,21 @@ def get_game_log(game_log_url):
       pgames = playoff_soup.find("tbody").findAll("tr")
 
       for pgame in pgames:
-        pgame_stats = get_game_stats(pgame, True)
+        pgame_stats = get_game_stats(pgame, pid)
         if pgame_stats:
           pgame_stats["playoffs"] = True
           year_game_logs.append(pgame_stats)
   
   return year_game_logs
 
-def get_game_stats(game, playoffs=False):
+def get_game_stats(game, pid):
   game_stats = {}
 
   fields = game.findAll("td")
   if len(fields) == 0:
     return None
 
+  game_stats["pid"] = pid
   for field in fields:
     data_stat = field["data-stat"]
     val = field.text
@@ -182,7 +185,7 @@ def get_game_stats(game, playoffs=False):
       continue
     if data_stat == "date_game": 
       # 2010-04-18
-      game_stats["date"] = val
+      game_stats["game_date"] = datetime.strptime(val, "%Y-%m-%d").strftime("%Y%m%d")
       date_obj = datetime.strptime(val, "%Y-%m-%d")
       if date_obj.month < 8:
         game_stats["season"] = date_obj.year - 1
@@ -235,7 +238,7 @@ def get_college_stats(college_stats_table, pid):
   college_stats = []
   for year in years:
     season = year.find("th").text.split("-")[0]
-    season_stat = {season: {}}
+    season_stat = {"season": season, "pid": pid}
 
     fields = year.findAll("td")
     for field in fields:
@@ -243,7 +246,7 @@ def get_college_stats(college_stats_table, pid):
 
       if data_stat == "college_id":
         college = field.find("a").text
-        season_stat[season]["college"] = college
+        season_stat["college"] = college
         continue
 
       # convert to proper type
@@ -253,7 +256,7 @@ def get_college_stats(college_stats_table, pid):
       else:
         continue
 
-      season_stat[season][data_stat] = val
+      season_stat[data_stat] = val
     college_stats.append(season_stat)
   return college_stats
 
@@ -263,8 +266,8 @@ def get_shooting_stats(shootings_stats_table, pid):
 
   shooting_stats = []
   for year in years:
-    season = year.find("th").text.split("-")[0]
-    season_stat = {season: {}}
+    season = int(year.find("th").text.split("-")[0])
+    season_stat = {"season": season, "pid" : pid}
 
     fields = year.findAll("td")
     for field in fields:
@@ -277,7 +280,7 @@ def get_shooting_stats(shootings_stats_table, pid):
       else:
         continue
 
-      season_stat[season][data_stat] = val
+      season_stat[data_stat] = val
     shooting_stats.append(season_stat)
   return shooting_stats
 

@@ -40,3 +40,37 @@ CREATE TABLE box_score(
   reason TEXT,
   PRIMARY KEY (game_date, pid)
 );
+
+CREATE TABLE pbp
+(
+  id SERIAL NOT NULL,
+  /* PRIMARY */
+  game_date DATE NOT NULL,
+  /* PRIMARY */
+  assister TEXT,
+  away_score INT,
+  blocker TEXT,
+  drebounder TEXT,
+  distance INT,
+  ejected TEXT,
+  fg_type INT,
+  foul_drawer TEXT,
+  foul_type TEXT,
+  fouler TEXT,
+  full_timeout TEXT,
+  home_score INT,
+  make bool,
+  orebounder TEXT,
+  play TEXT,
+  play_time REAL NOT NULL,
+  play_time_raw TEXT NOT NULL,
+  quarter INT,
+  shooter TEXT,
+  steal TEXT,
+  sub_in TEXT,
+  sub_out TEXT,
+  turnover TEXT,
+  turnover_type TEXT,
+  violation TEXT,
+  PRIMARY KEY (id, game_date)
+);

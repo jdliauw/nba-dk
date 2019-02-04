@@ -1,6 +1,118 @@
-CREATE TABLE team_stats(
-  collected_date DATE NOT NULL, /* PRIMARY */
-  team TEXT NOT NULL,           /* PRIMARY */
+CREATE TABLE misc_stats
+(
+  collected_date DATE NOT NULL,
+  /* PRIMARY */
+  team TEXT NOT NULL,
+  /* PRIMARY */
+  age REAL,
+  wins INT,
+  losses INT,
+  wins_pyth INT,
+  losses_pyth INT,
+  mov REAL,
+  sos REAL,
+  srs REAL,
+  off_rtg REAL,
+  def_rtg REAL,
+  net_rtg REAL,
+  pace REAL,
+  fta_per_fga_pct REAL,
+  fg3a_per_fga_pct REAL,
+  ts_pct REAL,
+  efg_pct REAL,
+  tov_pct REAL,
+  orb_pct REAL,
+  ft_rate REAL,
+  opp_efg_pct REAL,
+  opp_tov_pct REAL,
+  drb_pct REAL,
+  opp_ft_rate REAL,
+  arena_name TEXT,
+  attendance INT,
+  attendance_per_g INT,
+  PRIMARY KEY (collected_date, team)
+);
+
+CREATE TABLE shooting_stats
+(
+  collected_date DATE NOT NULL,
+  /* PRIMARY */
+  team TEXT NOT NULL,
+  /* PRIMARY */
+  g INT,
+  mp INT,
+  fg_pct REAL,
+  avg_dist REAL,
+  fg2a_pct_fga REAL,
+  pct_fga_00_03 REAL,
+  pct_fga_03_10 REAL,
+  pct_fga_10_16 REAL,
+  pct_fga_16_xx REAL,
+  fg3a_pct_fga REAL,
+  fg2_pct REAL,
+  fg_pct_00_03 REAL,
+  fg_pct_03_10 REAL,
+  fg_pct_10_16 REAL,
+  fg_pct_16_xx REAL,
+  fg3_pct REAL,
+  fg2_pct_ast REAL,
+  pct_fg2_dunk REAL,
+  fg2_dunk INT,
+  pct_fg2_layup REAL,
+  fg2_layup INT,
+  fg3_pct_ast REAL,
+  pct_fg3a_corner REAL,
+  fg3_pct_corner REAL,
+  fg3a_heave INT,
+  fg3_heave INT,
+  opp_mp INT,
+  opp_fg_pct REAL,
+  opp_avg_dist REAL,
+  opp_fg2a_pct_fga REAL,
+  opp_pct_fga_00_03 REAL,
+  opp_pct_fga_03_10 REAL,
+  opp_pct_fga_10_16 REAL,
+  opp_pct_fga_16_xx REAL,
+  opp_fg3a_pct_fga REAL,
+  opp_fg2_pct REAL,
+  opp_fg_pct_00_03 REAL,
+  opp_fg_pct_03_10 REAL,
+  opp_fg_pct_10_16 REAL,
+  opp_fg_pct_16_xx REAL,
+  opp_fg3_pct REAL,
+  opp_fg2_pct_ast REAL,
+  opp_pct_fg2_dunk REAL,
+  opp_fg2_dunk INT,
+  opp_pct_fg2_layup REAL,
+  opp_fg2_layup INT,
+  opp_fg3_pct_ast REAL,
+  opp_pct_fg3a_corner REAL,
+  opp_fg3_pct_corner REAL,
+  PRIMARY KEY (collected_date, team)
+);
+
+CREATE TABLE standings
+(
+  collected_date DATE PRIMARY KEY NOT NULL,
+  /* PRIMARY */
+  team TEXT,
+  conference TEXT,
+  seed INT,
+  wins INT,
+  losses INT,
+  win_loss_pct REAL,
+  gb INT,
+  pts_per_g REAL,
+  opp_pts_per_g REAL,
+  srs REAL
+);
+
+CREATE TABLE team_stats
+(
+  collected_date DATE NOT NULL,
+  /* PRIMARY */
+  team TEXT NOT NULL,
+  /* PRIMARY */
   rank INT,
   g INT,
   mp INT,
@@ -25,7 +137,7 @@ CREATE TABLE team_stats(
   tov INT,
   pf INT,
   pts INT,
-  orank INT,
+  opp_rank INT,
   opp_fg INT,
   opp_fga INT,
   opp_fg_pct REAL,
@@ -50,7 +162,8 @@ CREATE TABLE team_stats(
   PRIMARY KEY (collected_date, team)
 );
 
-CREATE TABLE team_stats_per_possession(
+CREATE TABLE team_stats_per_possession
+(
   collected_date DATE NOT NULL,
   team TEXT NOT NULL,
   rank INT,
@@ -77,7 +190,7 @@ CREATE TABLE team_stats_per_possession(
   tov INT,
   pf INT,
   pts INT,
-  orank INT,
+  opp_rank INT,
   opp_fg INT,
   opp_fga INT,
   opp_fg_pct REAL,

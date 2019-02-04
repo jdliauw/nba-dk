@@ -1,5 +1,6 @@
-from requests_html import HTMLSession
 from bs4 import BeautifulSoup
+from datetime import datetime
+from requests_html import HTMLSession
 import json
 import random
 import scraper
@@ -9,6 +10,7 @@ def main():
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(year)
     get_team_stats(url)
 
+# https://www.basketball-reference.com/leagues/NBA_2019.html
 def get_team_stats(url):
   scraper.sleep(3,8)
   table_ids = [
@@ -23,6 +25,8 @@ def get_team_stats(url):
     "opponent_shooting",
   ]
 
+  today = datetime.now().strftime("%Y%m%d")
+
   session = HTMLSession()
   response = session.get(url, timeout=5)
   if response.status_code != 200:
@@ -35,6 +39,7 @@ def get_team_stats(url):
   standings = []
   misc_stats = []
   team_stats = {}
+  team_per_stats = {}
   shooting_stats = {}
 
   for table_id in table_ids:
@@ -49,7 +54,7 @@ def get_team_stats(url):
         team_name = team.find("th", {"data-stat": "team_name"}).a["href"].split("/")[2]
         seed = team.find("th", {"data-stat": "team_name"}).text
         seed = int(seed[seed.find("(") + 1 : seed.find(")")])
-        team_stat = {"team": team_name, "conference" : conference, "seed": seed }
+        team_stat = {"team": team_name, "conference" : conference, "seed": seed, "collected_date": today }
 
         fields = team.findAll("td")
         for field in fields:
@@ -70,19 +75,38 @@ def get_team_stats(url):
 
     elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      team_stats[table_id] = []
 
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
         rank  = int(team.find("th", {"data-stat" : "ranker"}).text)
-        invididual_team_stats = { "team" : team_name, "rank" : rank }
-        if table_id not in team_stats:
-          team_stats[table_id] = []
-        
-        fields = team.findAll("td")
-        for field in fields[1:]:
-          invididual_team_stats[field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
-        team_stats[table_id].append(invididual_team_stats)
+
+        if table_id in ["team-stats-base", "opponent-stats-base"]:
+          if team_name not in team_stats:
+            team_stats[team_name] = {"collected_date" : today, "team" : team_name }
+
+          if table_id == "opponent-stats-base":
+            team_stats[team_name]["opp_rank"] = rank
+          else:
+            team_stats[team_name]["rank"] = rank
+
+          fields = team.findAll("td")
+          for field in fields[1:]:
+            team_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+        elif table_id in ["team-stats-per_poss", "opponent-stats-per_poss"]:
+          if team_name not in team_per_stats:
+            team_per_stats[team_name] = {"collected_date" : today, "team" : team_name }
+
+          if table_id == "opponent-stats-per_poss":
+            team_per_stats[team_name]["opp_rank"] = rank
+          else:
+            team_per_stats[team_name]["rank"] = rank
+
+          fields = team.findAll("td")
+          for field in fields[1:]:
+            team_per_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+        else:
+          # TODO: log unknown table type
+          print("Unknown table type")
 
     # this creates a layer of dict keys that we don't care about...alternatively
     # you could iterate and check by key but that's adding time
@@ -91,7 +115,7 @@ def get_team_stats(url):
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
         if team_name not in shooting_stats:
-          shooting_stats[team_name] = {"team": team_name}
+          shooting_stats[team_name] = {"team" : team_name, "collected_date" : today}
 
         fields = team.findAll("td")
         for field in fields[1:]:
@@ -101,7 +125,7 @@ def get_team_stats(url):
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-        team_misc_stats = {"team": team_name}
+        team_misc_stats = {"team": team_name, "collected_date" : today}
         
         fields = team.findAll("td")
         for field in fields[1:]:
@@ -115,13 +139,14 @@ def get_team_stats(url):
 
           team_misc_stats[field["data-stat"]] = float(text) if "." in text else int(text)
         misc_stats.append(team_misc_stats)
-  
+
   jstandings = json.dumps(standings)
   jteam_stats = json.dumps(team_stats)
+  jteam_per_stats = json.dumps(team_per_stats)
   jshooting_stats = json.dumps(shooting_stats)
   jmisc_stats = json.dumps(misc_stats)
 
-  for k, v in enumerate([jteam_stats, jshooting_stats, jstandings, jmisc_stats]):
+  for k, v in enumerate([jteam_per_stats, jteam_stats, jshooting_stats, jstandings, jmisc_stats]):
     f = open("./team_stats/{}.json".format(k), "w+")
     f.write(v)
     f.close()
