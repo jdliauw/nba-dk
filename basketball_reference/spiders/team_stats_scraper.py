@@ -6,12 +6,12 @@ import random
 import scraper
 
 def main():
-  for year in range(1990, 2019):
-    url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(year)
-    get_team_stats(url)
+  for season in range(1990, 2019):
+    url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(season)
+    get_team_stats(url, season)
 
 # https://www.basketball-reference.com/leagues/NBA_2019.html
-def get_team_stats(url):
+def get_team_stats(url, season):
   scraper.sleep(3,8)
   table_ids = [
     "confs_standings_E",
@@ -54,7 +54,7 @@ def get_team_stats(url):
         team_name = team.find("th", {"data-stat": "team_name"}).a["href"].split("/")[2]
         seed = team.find("th", {"data-stat": "team_name"}).text
         seed = int(seed[seed.find("(") + 1 : seed.find(")")])
-        team_stat = {"team": team_name, "conference" : conference, "seed": seed, "collected_date": today }
+        standing = {"team": team_name, "conference" : conference, "seed": seed, "collected_date": today, "season" : season }
 
         fields = team.findAll("td")
         for field in fields:
@@ -69,9 +69,9 @@ def get_team_stats(url):
           else:
             val = int(val)
           
-          team_stat[data_stat] = val
+          standing[data_stat] = val
 
-        standings.append(team_stat)
+        standings.append(standing)
 
     elif table_id in ["team-stats-base", "opponent-stats-base", "team-stats-per_poss", "opponent-stats-per_poss"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
@@ -82,7 +82,7 @@ def get_team_stats(url):
 
         if table_id in ["team-stats-base", "opponent-stats-base"]:
           if team_name not in team_stats:
-            team_stats[team_name] = {"collected_date" : today, "team" : team_name }
+            team_stats[team_name] = {"collected_date" : today, "team" : team_name, "season" : season }
 
           if table_id == "opponent-stats-base":
             team_stats[team_name]["opp_rank"] = rank
@@ -94,7 +94,7 @@ def get_team_stats(url):
             team_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
         elif table_id in ["team-stats-per_poss", "opponent-stats-per_poss"]:
           if team_name not in team_per_stats:
-            team_per_stats[team_name] = {"collected_date" : today, "team" : team_name }
+            team_per_stats[team_name] = {"collected_date" : today, "team" : team_name, "season" : season }
 
           if table_id == "opponent-stats-per_poss":
             team_per_stats[team_name]["opp_rank"] = rank
@@ -115,7 +115,7 @@ def get_team_stats(url):
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
         if team_name not in shooting_stats:
-          shooting_stats[team_name] = {"team" : team_name, "collected_date" : today}
+          shooting_stats[team_name] = {"team" : team_name, "collected_date" : today, "season" : season }
 
         fields = team.findAll("td")
         for field in fields[1:]:
@@ -125,7 +125,7 @@ def get_team_stats(url):
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-        team_misc_stats = {"team": team_name, "collected_date" : today}
+        team_misc_stats = {"team": team_name, "collected_date" : today, "season" : season }
         
         fields = team.findAll("td")
         for field in fields[1:]:

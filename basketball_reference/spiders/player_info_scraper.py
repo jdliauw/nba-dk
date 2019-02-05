@@ -298,17 +298,15 @@ def get_contracts(contracts_table, pid):
   soup = BeautifulSoup(contracts_table, 'html.parser')
   cols = soup.find("thead").findAll("th")
   vals = soup.find("tbody").findAll("td")
-  contracts = []
+  contracts = {"pid": pid}
   if len(cols) == len(vals):
     for col, val in zip(cols, vals):
-      contract = {}
       if col["data-stat"].lower() != "team":
         year = int(col["data-stat"][:4]) + 1
         salary = int(val.text.replace("$", "").replace(",", ""))
-        contract[year] = salary
+        contracts[year] = salary
       else:
-        contract["team"] = val.find("a")["href"].split("/")[2].replace(".html", "")
-      contracts.append(contract)
+        contracts["team"] = val.find("a")["href"].split("/")[2].replace(".html", "")
   return contracts
 
 def get_shooting_stats(shootings_stats_table, pid):

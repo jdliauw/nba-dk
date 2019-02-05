@@ -1,6 +1,7 @@
 [
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "hardeja01",
         "starter": true,
         "team": "HOU",
@@ -41,6 +42,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "tuckepj01",
         "starter": true,
         "team": "HOU",
@@ -81,6 +83,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "farieke01",
         "starter": true,
         "team": "HOU",
@@ -121,6 +124,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "paulch01",
         "starter": true,
         "team": "HOU",
@@ -161,6 +165,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "gordoer01",
         "starter": true,
         "team": "HOU",
@@ -201,6 +206,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "riverau01",
         "starter": false,
         "team": "HOU",
@@ -241,6 +247,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "ennisja01",
         "starter": false,
         "team": "HOU",
@@ -281,6 +288,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "greenge01",
         "starter": false,
         "team": "HOU",
@@ -321,6 +329,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "harteis01",
         "starter": false,
         "team": "HOU",
@@ -361,6 +370,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "clarkga01",
         "starter": false,
         "team": "HOU",
@@ -401,6 +411,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "chrisma01",
         "starter": false,
         "team": "HOU",
@@ -408,6 +419,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "knighbr03",
         "starter": false,
         "team": "HOU",
@@ -415,6 +427,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "hilarne01",
         "starter": false,
         "team": "HOU",
@@ -422,6 +435,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "beaslma01",
         "starter": true,
         "team": "DEN",
@@ -462,6 +476,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "morrimo01",
         "starter": true,
         "team": "DEN",
@@ -502,6 +517,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "jokicni01",
         "starter": true,
         "team": "DEN",
@@ -542,6 +558,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "millspa01",
         "starter": true,
         "team": "DEN",
@@ -582,6 +599,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "bartowi01",
         "starter": true,
         "team": "DEN",
@@ -622,6 +640,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "craigto01",
         "starter": false,
         "team": "DEN",
@@ -662,6 +681,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "plumlma01",
         "starter": false,
         "team": "DEN",
@@ -702,6 +722,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "lylestr01",
         "starter": false,
         "team": "DEN",
@@ -742,6 +763,7 @@
     },
     {
         "game_date": "20190201",
+        "season": 2019,
         "pid": "hernaju01",
         "starter": false,
         "team": "DEN",
@@ -782,7 +804,8 @@
     },
     {
         "game_date": "20190201",
-        "pid": "goodwbr01",
+        "season": 2019,
+        "pid": "lydonty01",
         "starter": false,
         "team": "DEN",
         "mp": "0:47",
@@ -822,7 +845,8 @@
     },
     {
         "game_date": "20190201",
-        "pid": "lydonty01",
+        "season": 2019,
+        "pid": "goodwbr01",
         "starter": false,
         "team": "DEN",
         "mp": "0:47",

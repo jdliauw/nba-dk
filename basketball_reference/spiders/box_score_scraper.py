@@ -37,7 +37,11 @@ def scrape_box_score(box_score_url):
   home, away = get_teams(soup)
 
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
-  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y").strftime("%Y%m%d")
+  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
+  season = game_date.year
+  if game_date.month > 8:
+    season += 1
+  game_date = game_date.strftime("%Y%m%d")
   stats = []
   
   tables = soup.findAll("table", {"class": ["sortable", "stats_table", "now_sortable"]})
@@ -48,7 +52,7 @@ def scrape_box_score(box_score_url):
     team = table.get("id").split("_")[1].upper()
 
     for i, tr in enumerate(trs):
-      player_stats = {"game_date" : game_date}
+      player_stats = {"game_date" : game_date, "season" : season }
       tds = tr.findAll("td")
       try:
         pid = tr.th.a["href"].split("/")[-1][:-5]
@@ -89,7 +93,13 @@ def scrape_pbp(pbp_url):
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
-  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y").strftime("%Y%m%d")
+  game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
+  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
+  season = game_date.year
+  if game_date.month > 8:
+    season += 1
+  game_date = game_date.strftime("%Y%m%d")
+
   stats = []
   quarter = 1
 
@@ -142,6 +152,7 @@ def scrape_pbp(pbp_url):
     if stat:
       stat["quarter"] = quarter
       stat["game_date"] = game_date
+      stat["season"] = season
       stats.append(stat)
 
   f = open("./box_score/{}_{}_pbp.json".format(home, away), "w+")
