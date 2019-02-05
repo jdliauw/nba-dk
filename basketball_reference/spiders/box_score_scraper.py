@@ -27,6 +27,7 @@ def scrape_day(month, day, year):
       scrape_box_score(base + href)
       scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
 
+# https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
   scraper.sleep(3,8)
   soup = scraper.get_soup(box_score_url)
@@ -36,11 +37,7 @@ def scrape_box_score(box_score_url):
   home, away = get_teams(soup)
 
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
-  datetime_object = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
-  year = int(datetime.strftime(datetime_object, "%Y"))
-  month = int(datetime.strftime(datetime_object, "%m"))
-  day = int(datetime.strftime(datetime_object, "%d"))
-  weekday = datetime.strftime(datetime_object, "%A")
+  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y").strftime("%Y%m%d")
   stats = []
   
   tables = soup.findAll("table", {"class": ["sortable", "stats_table", "now_sortable"]})
@@ -51,19 +48,19 @@ def scrape_box_score(box_score_url):
     team = table.get("id").split("_")[1].upper()
 
     for i, tr in enumerate(trs):
-      player_stats = {}
+      player_stats = {"game_date" : game_date}
       tds = tr.findAll("td")
       try:
-        id = tr.th.a["href"].split("/")[-1][:-5]
+        pid = tr.th.a["href"].split("/")[-1][:-5]
         starter = True if i < 5 else False
 
-        player_stats["id"] = id
+        player_stats["pid"] = pid
         player_stats["starter"] = starter
         player_stats["team"] = team
 
         # Inefficient, but makes the data cleaner
         for index, stat in enumerate(stats):
-          if stat["id"] == id:
+          if stat["pid"] == pid:
             player_stats = stat
             stats.remove(stats[index])
             break
@@ -82,6 +79,7 @@ def scrape_box_score(box_score_url):
   f.write(json.dumps(stats))
   f.close()
 
+# https://www.basketball-reference.com/boxscores/pbp/201902010DEN.html
 def scrape_pbp(pbp_url):
   scraper.sleep(3,8)
   soup = scraper.get_soup(pbp_url)
@@ -90,6 +88,8 @@ def scrape_pbp(pbp_url):
     return
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
+  game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
+  game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y").strftime("%Y%m%d")
   stats = []
   quarter = 1
 
@@ -141,9 +141,10 @@ def scrape_pbp(pbp_url):
 
     if stat:
       stat["quarter"] = quarter
+      stat["game_date"] = game_date
       stats.append(stat)
 
-  f = open("{}_{}_pbp.json".format(home, away), "w+")
+  f = open("./box_score/{}_{}_pbp.json".format(home, away), "w+")
   f.write(json.dumps(stats))
   f.close()
 
@@ -237,7 +238,7 @@ def parse_play(td, stat):
       logging.warning("Unknown type of turnover: {}".format(td_text))
 
   # FOULS
-  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Personal take foul", "Shooting foul", "Offensive foul", "Technical foul"]):
+  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Personal take foul", "Shooting foul", "Offensive foul", "Technical foul", "Def 3 sec"]):
     a_tags = td.findAll("a")
     if len(a_tags) == 2:
       stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
@@ -256,6 +257,8 @@ def parse_play(td, stat):
     elif len(a_tags) == 1 and "Technical foul" in td_text:
       stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
       stat["foul_type"] = "technical"
+    elif "Def 3 sec" in td_text:
+        pass
     else:
       logging.warning("Unknown type of foul: {}".format(td_text))
 

@@ -6,3 +6,4 @@ env/
 postgres/pgdata/
 .DS_Store
 basketball_reference/.DS_Store
+basketball_reference/__pycache__

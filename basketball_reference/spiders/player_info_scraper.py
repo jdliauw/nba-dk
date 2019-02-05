@@ -197,7 +197,7 @@ def get_game_stats(game, pid):
       continue
     if data_stat == "date_game": 
       # 2010-04-18
-      game_stats["game_date"] = datetime.strptime(val, "%Y-%m-%d").strftime("%Y%m%d")
+      game_stats["game_date"] = val.replace("-", "")
       date_obj = datetime.strptime(val, "%Y-%m-%d")
       if date_obj.month < 8:
         game_stats["season"] = date_obj.year
