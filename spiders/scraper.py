@@ -53,6 +53,7 @@ def get_number_type(value):
     try:
       value = float(value)
     except ValueError:
+      # string
       if len(value) > 0:
         return value
       else: 

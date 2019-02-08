@@ -1,9 +1,8 @@
-.vscode/
+./__pycache__
+.DS_Store
+env/
+**.pyc
 **/*.pyc
 .postgres/pgdata/*
-**.pyc
-env/
+.vscode/
 postgres/pgdata/
-.DS_Store
-basketball_reference/.DS_Store
-basketball_reference/__pycache__

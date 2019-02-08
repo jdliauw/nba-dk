@@ -1,19 +1,24 @@
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta
+
+import db
 import json
 import logging
 import scraper
 
 def main():
   yesterday = date.today() - timedelta(1)
-  year = yesterday.year
+  year = str(yesterday.year)
   month = yesterday.month
-  day = yesterday.day
+  month = str(month) if month >= 10 else "0{}".format(month)
+  day = str(yesterday.day)
   logging.basicConfig(filename="{}-{}-{}.log".format(year, month, day), level=logging.DEBUG)
   scrape_day(month, day, year)
 
+# https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
+  url = "https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019"
   soup = scraper.get_soup(url)
   if soup is None:
     # LOG
@@ -24,8 +29,10 @@ def scrape_day(month, day, year):
     href = a_tag["href"]
     if "boxscore" in href and a_tag.text == 'Box Score':
       base = "https://www.basketball-reference.com"
-      scrape_box_score(base + href)
-      scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+      bs = scrape_box_score(base + href)
+      db.insert(bs, table="games")
+      # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+      # db.insert(pbp, table="pbp")
 
 # https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
@@ -35,6 +42,10 @@ def scrape_box_score(box_score_url):
     # LOG
     return
   home, away = get_teams(soup)
+  st = soup.find("meta", {"name": "Description"})["content"]
+  st = st[st.find("(") + 1 : st.rfind(")")]
+  home_score = int(st[st.rfind("(") + 1 : ])
+  away_score = int(st[:st.find(")")])
 
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
   game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
@@ -52,7 +63,14 @@ def scrape_box_score(box_score_url):
     team = table.get("id").split("_")[1].upper()
 
     for i, tr in enumerate(trs):
-      player_stats = {"game_date" : game_date, "season" : season }
+      player_stats = {
+        "game_date" : game_date,
+        "opp" : away if team == home else home,
+        "team": team,
+        "home_score": home_score,
+        "away_score": away_score,
+        "season" : season,
+        }
       tds = tr.findAll("td")
       try:
         pid = tr.th.a["href"].split("/")[-1][:-5]
@@ -60,7 +78,7 @@ def scrape_box_score(box_score_url):
 
         player_stats["pid"] = pid
         player_stats["starter"] = starter
-        player_stats["team"] = team
+        
 
         # Inefficient, but makes the data cleaner
         for index, stat in enumerate(stats):
@@ -71,6 +89,12 @@ def scrape_box_score(box_score_url):
 
         # stuff the dict with number vals
         for td in tds:
+          if td["data-stat"] == "mp":
+            m, s = td.text.split(":")
+            player_stats["play_time_raw"] = td.text
+            player_stats["mp"] = int(m)
+            player_stats["sp"] = int(m)*60 + int(s)
+
           player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
 
         stats.append(player_stats)
@@ -79,9 +103,7 @@ def scrape_box_score(box_score_url):
       except Exception as e:
         logging.error("Exception {} caught".format(e))
 
-  f = open("./box_score/{}_{}_box_score.json".format(home, away), "w+")
-  f.write(json.dumps(stats))
-  f.close()
+  return stats
 
 # https://www.basketball-reference.com/boxscores/pbp/201902010DEN.html
 def scrape_pbp(pbp_url):
@@ -155,9 +177,7 @@ def scrape_pbp(pbp_url):
       stat["season"] = season
       stats.append(stat)
 
-  f = open("./box_score/{}_{}_pbp.json".format(home, away), "w+")
-  f.write(json.dumps(stats))
-  f.close()
+  return stats
 
 def parse_play(td, stat):
   td_text = td.text

@@ -8,7 +8,7 @@ import scraper
 def main():
   for season in range(1990, 2019):
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(season)
-    get_team_stats(url, season)
+    _ = get_team_stats(url, season)
 
 # https://www.basketball-reference.com/leagues/NBA_2019.html
 def get_team_stats(url, season):
@@ -140,16 +140,13 @@ def get_team_stats(url, season):
           team_misc_stats[field["data-stat"]] = float(text) if "." in text else int(text)
         misc_stats.append(team_misc_stats)
 
-  jstandings = json.dumps(standings)
-  jteam_stats = json.dumps(team_stats)
-  jteam_per_stats = json.dumps(team_per_stats)
-  jshooting_stats = json.dumps(shooting_stats)
-  jmisc_stats = json.dumps(misc_stats)
-
-  for k, v in enumerate([jteam_per_stats, jteam_stats, jshooting_stats, jstandings, jmisc_stats]):
-    f = open("./team_stats/{}.json".format(k), "w+")
-    f.write(v)
-    f.close()
+  all_stats = {}
+  all_stats["standings"] = standings
+  all_stats["team_stats"] = team_stats
+  all_stats["team_stats_per_100"] = team_per_stats
+  all_stats["team_shooting_stats"] = shooting_stats
+  all_stats["misc_stats"] = misc_stats
+  return all_stats
 
 if __name__ == "__main__":
   main()

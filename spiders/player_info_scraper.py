@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from requests_html import HTMLSession
 
+import db
 import json
 import logging
 import random
@@ -9,6 +10,7 @@ import scraper
 import time
 
 BASE = "https://www.basketball-reference.com"
+TODAY = datetime.now().strftime("%Y%m%d")
 
 def main():
   # logging.basicConfig(filename='player_info_scraper.log',level=logging.DEBUG)
@@ -19,13 +21,12 @@ def main():
 def get_player_urls(url):
   soup = scraper.get_soup(url)
   players = soup.find("table", {"id": "per_game_stats"}).findAll("tr", {"class" : "full_table"})
-
   for player in players:
-    player_url = player.findAll("a")[0]["href"]
+    player_url = BASE + player.findAll("a")[0]["href"]
     player_stats = get_player_info(player_url)
+    db.insert(stat=player_stats, table="player_info")
 
 # https://www.basketball-reference.com/players/m/mitchdo01.html
-# 2 pro, college, seasons, playoffs
 def get_player_info(url):
   scraper.sleep(3,8)
   pid = url[url.rfind("/") + 1 : -5]
@@ -40,15 +41,6 @@ def get_player_info(url):
 
   soup = BeautifulSoup(response.text, "html.parser")
   session.close()
-
-  # GAME LOG
-  game_log_urls = soup.find("table", {"id": "per_game"}).findAll("th", {"data-stat" : "season"})
-  all_stats["game_logs"] = []
-  for game_log_url in game_log_urls:
-    atag = game_log_url.find("a") 
-    if atag is not None:
-      year = atag["href"].split("/")[-2]
-      all_stats["game_logs"] += get_game_log(BASE + atag["href"], pid)
 
    # Need to render for shooting and college stats
   response.html.render()
@@ -65,13 +57,13 @@ def get_player_info(url):
     college_stats_table = college_stats_table.html
     all_stats["college_stats"] = get_college_stats(college_stats_table, pid)
   
-  # SALARIES
+  # SALARIES - RENDER REQUIRED
   salaries_table = response.html.find("#all_salaries", first=True)
   if salaries_table is not None:
     salaries_table = salaries_table.html
     all_stats["salaries"] = get_salaries(salaries_table, pid)
   
-  # CONTRACTS
+  # CONTRACTS - RENDER REQUIRED
   contracts_table = response.html.find("table[id^='contracts']", first=True)
   if contracts_table is not None:
     contracts_table = contracts_table.html
@@ -139,7 +131,18 @@ def get_player_info(url):
       if "https://twitter.com" in a["href"]:
         all_stats["player_info"]["twitter"] = a["href"].split("/")[-1]
 
-  set_player_stats(all_stats)
+  # Let's try to just use the box score since it has all the stats (plus others missing here)
+  """
+  # GAME LOG
+  game_log_urls = soup.find("table", {"id": "per_game"}).findAll("th", {"data-stat" : "season"})
+  all_stats["game_logs"] = []
+  for game_log_url in game_log_urls:
+    atag = game_log_url.find("a") 
+    if atag is not None:
+      year = atag["href"].split("/")[-2]
+      all_stats["game_logs"] += get_game_log(BASE + atag["href"], pid)
+  """
+
   return all_stats
 
 def get_game_log(game_log_url, pid):
@@ -226,8 +229,8 @@ def get_game_stats(game, pid):
     elif data_stat == "mp":
       # 16:20
       m, s = val.split(":")
-      game_stats["minutes_played"] = int(m)
-      game_stats["seconds_played"] = int(s)
+      game_stats["mp"] = int(m)
+      game_stats["sp"] = int(s)
       continue
     elif data_stat == "gs":
       game_stats["starter"] = True if int(val) == 1 else 0
@@ -279,7 +282,7 @@ def get_salaries(salaries_table, pid):
   salaries = []
   for year in years:
     season = int(year.find("th").text.split("-")[0]) + 1
-    season_salary = {"season": season, "pid": pid}
+    season_salary = {"season": season, "pid": pid, "collected_date": TODAY }
 
     fields = year.findAll("td")
     for field in fields:
@@ -298,7 +301,7 @@ def get_contracts(contracts_table, pid):
   soup = BeautifulSoup(contracts_table, 'html.parser')
   cols = soup.find("thead").findAll("th")
   vals = soup.find("tbody").findAll("td")
-  contracts = {"pid": pid}
+  contracts = {"pid": pid , "collected_date" : TODAY }
   if len(cols) == len(vals):
     for col, val in zip(cols, vals):
       if col["data-stat"].lower() != "team":
@@ -316,7 +319,7 @@ def get_shooting_stats(shootings_stats_table, pid):
   shooting_stats = []
   for year in years:
     season = int(year.find("th").text.split("-")[0]) + 1
-    season_stat = {"season": season, "pid" : pid}
+    season_stat = {"season": season, "pid" : pid, "collected_date": TODAY }
 
     fields = year.findAll("td")
     for field in fields:
@@ -332,13 +335,6 @@ def get_shooting_stats(shootings_stats_table, pid):
       season_stat[data_stat] = val
     shooting_stats.append(season_stat)
   return shooting_stats
-
-def set_player_stats(player_stats):
-  jplayer_stats = json.dumps(player_stats)
-  f = open("player_stats.json", "w+")
-  f.write(jplayer_stats)
-  f.close()
-
 
 if __name__ == "__main__":
   main()
