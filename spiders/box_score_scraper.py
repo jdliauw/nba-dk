@@ -1,46 +1,91 @@
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta
+from db import PostgresDB
 
-import db
 import json
 import logging
+import pdb
 import scraper
 
-def main():
+BASE = "https://www.basketball-reference.com"
+
+def run():
+  logging.basicConfig(filename="bss.log", level=logging.DEBUG)
+
+  # up to the 15th from the 1st
+  start = date(2008, 10, 24)
+  end = date(2009, 6, 20) - timedelta(1)
+  date_range = []
+  for n in range(int((end - start).days) + 1):
+    date_range.append(start + timedelta(n))
+
+  """
+  # yesterday (instead of date range)
+  base = datetime.today()
+  date_list = [base - timedelta(days=x) for x in range(0, numdays)]
   yesterday = date.today() - timedelta(1)
-  year = str(yesterday.year)
-  month = yesterday.month
-  month = str(month) if month >= 10 else "0{}".format(month)
-  day = str(yesterday.day)
-  logging.basicConfig(filename="{}-{}-{}.log".format(year, month, day), level=logging.DEBUG)
-  scrape_day(month, day, year)
+  """
+  f = open("game_dates.json", "r+")
+  game_dates = json.loads(f.read())
+  f.close()
+
+  for dt in date_range:
+    print("Scraping games on {}".format(dt.strftime("%Y-%m-%d")))
+    game_date = dt.strftime("%Y%m%d")
+
+    if game_date in game_dates:
+      print("Already scraped games on {}, skipping".format(dt.strftime("%Y-%m-%d")))
+      continue
+
+    year = str(dt.year)
+    month = dt.month
+    month = str(month) if month >= 10 else "0{}".format(month)
+    day = str(dt.day)
+
+    scrape_day(month, day, year) # insert happens in scrape_day()
+    f = open("game_dates.json", "r+")
+    game_dates = json.loads(f.read())
+    f.seek(0)
+    f.truncate()
+    game_dates.append(game_date)
+    game_dates.sort()
+    f.write(json.dumps(game_dates))
+    f.close()
 
 # https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
+  scraper.sleep(3,4)
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-  url = "https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019"
   soup = scraper.get_soup(url)
   if soup is None:
-    # LOG
-    return
+    url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month[1:], day, year)
+    soup = scraper.get_soup(url)
+    if soup is None:
+      print("NO SOUP FOR YOU")
+      return
 
-  a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
+  a_tags = soup.find("div", {"class": "game_summaries"})
+  if a_tags is None:
+    print("No games on {}-{}-{}".format(year, month, day))
+    return
+  a_tags = a_tags.findAll("a")
+
   for a_tag in a_tags:
     href = a_tag["href"]
     if "boxscore" in href and a_tag.text == 'Box Score':
       base = "https://www.basketball-reference.com"
       bs = scrape_box_score(base + href)
-      db.insert(bs, table="games")
-      # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-      # db.insert(pbp, table="pbp")
+      pgdb.insert(bs, table="games")
+      pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+      pgdb.insert(pbp, table="pbp")
 
 # https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
-  scraper.sleep(3,8)
+  scraper.sleep(3,4)
   soup = scraper.get_soup(box_score_url)
   if soup is None:
     # LOG
-    return
+    return None
   home, away = get_teams(soup)
   st = soup.find("meta", {"name": "Description"})["content"]
   st = st[st.find("(") + 1 : st.rfind(")")]
@@ -65,6 +110,7 @@ def scrape_box_score(box_score_url):
     for i, tr in enumerate(trs):
       player_stats = {
         "game_date" : game_date,
+        "home": home,
         "opp" : away if team == home else home,
         "team": team,
         "home_score": home_score,
@@ -94,9 +140,8 @@ def scrape_box_score(box_score_url):
             player_stats["play_time_raw"] = td.text
             player_stats["mp"] = int(m)
             player_stats["sp"] = int(m)*60 + int(s)
-
-          player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
-
+          else:
+            player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
         stats.append(player_stats)
       except TypeError:
         pass
@@ -107,11 +152,11 @@ def scrape_box_score(box_score_url):
 
 # https://www.basketball-reference.com/boxscores/pbp/201902010DEN.html
 def scrape_pbp(pbp_url):
-  scraper.sleep(3,8)
+  scraper.sleep(3,5)
   soup = scraper.get_soup(pbp_url)
   if soup is None:
     # LOG
-    return
+    return None
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
@@ -169,12 +214,14 @@ def scrape_pbp(pbp_url):
       ms = tds[0].text.split(".")[1]
       seconds = float(seconds) + (float(minutes) * 60) + float(ms)
       stat["play_time"] = seconds
-      stat["play"] = tds[1].text
+      stat["play"] = tds[1].text.replace("'", "")
 
     if stat:
       stat["quarter"] = quarter
       stat["game_date"] = game_date
       stat["season"] = season
+      stat["home"] = home
+      stat["away"] = away
       stats.append(stat)
 
   return stats
@@ -246,11 +293,19 @@ def parse_play(td, stat):
     else:
       logging.warning("a_tags len of {}".format(len(td_text)))
 
-  # TIMEOUT (starting 2018 season, only full)
-  elif " timeout" in td_text:
-    team = td_text[:td_text.find(" full timeout")]
-    if len(team) > 0:
-      stat["full_timeout"] = scraper.LONG_ABBREV_DICT[team]
+  # TIMEOUT
+  elif "timeout" in td_text:
+    if "Official timeout" in td_text:
+      stat["full_timeout"] = "Official"
+    elif "20 second timeout" in td_text:
+      stat["full_timeout"] = "20s"
+    elif any(k in td_text for k in ["no timeout", "Excess timeout", "excessive timeout"]):
+      pass
+
+    elif " timeout" in td_text:
+      team = td_text[:td_text.find(" full timeout")]
+      if len(team) > 0:
+        stat["full_timeout"] = scraper.LONG_ABBREV_DICT[team]
 
   # TURNOVERS
   elif "Turnover " in td_text:
@@ -268,30 +323,47 @@ def parse_play(td, stat):
     else:
       logging.warning("Unknown type of turnover: {}".format(td_text))
 
-  # FOULS
-  elif any(k in td_text for k in ["Loose ball", "Personal foul", "Personal take foul", "Shooting foul", "Offensive foul", "Technical foul", "Def 3 sec"]):
+  # FOULS / TECHS
+  elif any(k in td_text for k in ["Away from play", "Clear path", "Def 3 sec", "Defensive three", 
+  "Delay tech", "Double technical", "Flagrant foul", "Hanging tech", "Inbound foul", "Loose ball", 
+  "Offensive charge", "Offensive foul", "Personal block", "Personal foul", "Personal take foul", 
+  "Shooting block foul", "Shooting foul", "Technical foul"]):
     a_tags = td.findAll("a")
-    if len(a_tags) == 2:
+    if len(a_tags) >= 1:
       stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
+    if len(a_tags) == 2:
       stat["foul_drawer"] = a_tags[1]["href"].split("/")[-1][:-5]
 
-      if "Loose ball" in td_text:
-        stat["foul_type"] = "loose ball"
-      elif any(k in td_text for k in ["Personal foul", "Personal take foul"]):
-        stat["foul_type"] = "personal"
-      elif "Shooting foul" in td_text:
-        stat["foul_type"] = "shooting"
-      elif "Offensive foul" in td_text:
-        stat["foul_type"] = "offensive"
-      else:
-        logging.warning("Unknown type of foul: {}".format(td_text))  
-    elif len(a_tags) == 1 and "Technical foul" in td_text:
-      stat["fouler"] = a_tags[0]["href"].split("/")[-1][:-5]
-      stat["foul_type"] = "technical"
-    elif "Def 3 sec" in td_text:
-        pass
+    if "Away from play" in td_text:
+      stat["foul_type"] = "away from play"
+    elif "Clear path" in td_text:
+      stat["foul_type"] = "clear path"
+    elif any(k in td_text for k in ["Def 3 sec", "Defensive three"]):
+      stat["foul_type"] = "technical: defensive three"
+    elif "Delay tech" in td_text:
+      stat["tech_type"] = "delay"
+    elif "Double technical" in td_text:
+      stat["tech_type"] = "double"
+    elif "Flagrant foul" in td_text:
+      stat["tech_type"] = "flagrant"
+    elif "Hanging tech" in td_text:
+      stat["tech_type"] = "hanging"
+    elif "Inbound foul" in td_text:
+      stat["foul_type"] = "inbound"
+    elif "Loose ball" in td_text:
+      stat["foul_type"] = "loose ball"
+    elif any(k in td_text for k in ["Offensive charge", "Offensive foul"]):
+      stat["foul_type"] = "personal"
+    elif any(k in td_text for k in ["Personal block", "Personal foul", "Personal take foul"]):
+      stat["foul_type"] = "personal"
+    elif any(k in td_text for k in ["Shooting block foul", "Shooting foul"]):
+      stat["foul_type"] = "shooting"
+    elif "Offensive foul" in td_text:
+      stat["foul_type"] = "offensive"
+    elif "Technical foul" in td_text:
+      stat["tech_type"] = "normal"
     else:
-      logging.warning("Unknown type of foul: {}".format(td_text))
+      logging.warning("Unknown type of foul/tech: {}".format(td_text))  
 
   # SUBSTITUTIONS
   elif "enters the game" in td_text:
@@ -331,11 +403,12 @@ def parse_play(td, stat):
 
   # UNKNOWN
   else:
-    logging.warning("Unknown type of play: {}".format(td_text))
+    logging.warning("Unknown type of play: {}, stat: {}".format(td_text, stat))
 
 def get_teams(soup):
   teams = soup.find("div", {"class" : "scorebox"}).findAll("a", {"itemprop" : "name"})
   return teams[1]["href"].split("/")[2], teams[0]["href"].split("/")[2]
 
 if __name__ == '__main__':
-  main()
+  pgdb = PostgresDB()
+  run()

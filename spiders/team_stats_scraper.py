@@ -1,21 +1,31 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
 from requests_html import HTMLSession
+
+from db import PostgresDB
 import json
 import random
 import scraper
 
-def main():
-  for season in range(1990, 2019):
+def run():
+  pgdb = PostgresDB()
+  for season in range(1950, 1971):
     url = "https://www.basketball-reference.com/leagues/NBA_{}.html".format(season)
-    _ = get_team_stats(url, season)
+    all_stats = get_team_stats(url, season)
+    for stat in all_stats:
+      pgdb.insert(all_stats[stat], stat)
+  pgdb.close()
 
 # https://www.basketball-reference.com/leagues/NBA_2019.html
 def get_team_stats(url, season):
-  scraper.sleep(3,8)
+  print("Scraping {} season: {}".format(season, url))
+  scraper.sleep(3,4)
   table_ids = [
     "confs_standings_E",
     "confs_standings_W",
+    "divs_standings_E",
+    "divs_standings_W",
+    "divs_standings_",
     "team-stats-base",
     "opponent-stats-base",
     "team-stats-per_poss",
@@ -26,12 +36,13 @@ def get_team_stats(url, season):
   ]
 
   today = datetime.now().strftime("%Y%m%d")
-
   session = HTMLSession()
   response = session.get(url, timeout=5)
+  session.close()
   if response.status_code != 200:
     # LOG error
-    print("")
+    print("Invalid response")
+    return []
   response.html.render()
 
   # when iterating over different tables we don't want to overwrite the
@@ -43,33 +54,39 @@ def get_team_stats(url, season):
   shooting_stats = {}
 
   for table_id in table_ids:
-    response_html = response.html.find("#{}".format(table_id), first=True).html
+    try:
+      response_html = response.html.find("#{}".format(table_id), first=True).html
+    except:
+      print("{} not a table for {} season".format(table_id, season))
+      continue
     soup = BeautifulSoup(response_html, 'html.parser')
 
-    if table_id in ["confs_standings_E", "confs_standings_W"]:
+    if table_id in ["confs_standings_E", "confs_standings_W", "divs_standings_E", "divs_standings_W", "divs_standings_"]:
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
-      conference = "east" if table_id in "confs_standings_E" else "west"
+      conference = "east" if table_id in ["confs_standings_E", "divs_standings_E"] else "west"
 
       for team in teams:
-        team_name = team.find("th", {"data-stat": "team_name"}).a["href"].split("/")[2]
-        seed = team.find("th", {"data-stat": "team_name"}).text
-        seed = int(seed[seed.find("(") + 1 : seed.find(")")])
-        standing = {"team": team_name, "conference" : conference, "seed": seed, "collected_date": today, "season" : season }
+        team_name = team.find("th", {"data-stat": "team_name"})
+
+        # Division header
+        if team_name is None:
+          continue
+        team_name = team_name.a["href"].split("/")[2]
+
+        standing = {"team": team_name, "conference" : conference, "collected_date": today, "season" : season }
+        if table_id != "divs_standings_":
+          seed = team.find("th", {"data-stat": "team_name"}).text
+          seed = int(seed[seed.find("(") + 1 : seed.find(")")])
+          standing["seed"] = seed
 
         fields = team.findAll("td")
         for field in fields:
           data_stat = field["data-stat"]
 
           # convert to proper type
-          val = field.text
-          if "." in val:
-            val = float(val)
-          elif val == "—":
-            val = 0.0
-          else:
-            val = int(val)
-          
-          standing[data_stat] = val
+          val = scraper.get_converted_type(field.text)
+          if val is not None:
+            standing[data_stat] = val
 
         standings.append(standing)
 
@@ -78,7 +95,7 @@ def get_team_stats(url, season):
 
       for team in teams:
         team_name = team.find("td", {"data-stat": "team_name"}).a["href"].split("/")[2]
-        rank  = int(team.find("th", {"data-stat" : "ranker"}).text)
+        rank = int(team.find("th", {"data-stat" : "ranker"}).text)
 
         if table_id in ["team-stats-base", "opponent-stats-base"]:
           if team_name not in team_stats:
@@ -91,7 +108,9 @@ def get_team_stats(url, season):
 
           fields = team.findAll("td")
           for field in fields[1:]:
-            team_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+            val = scraper.get_converted_type(field.text)
+            if val is not None:
+              team_stats[team_name][field["data-stat"]] = val
         elif table_id in ["team-stats-per_poss", "opponent-stats-per_poss"]:
           if team_name not in team_per_stats:
             team_per_stats[team_name] = {"collected_date" : today, "team" : team_name, "season" : season }
@@ -103,7 +122,9 @@ def get_team_stats(url, season):
 
           fields = team.findAll("td")
           for field in fields[1:]:
-            team_per_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+            val = scraper.get_converted_type(field.text)
+            if val is not None:
+              team_per_stats[team_name][field["data-stat"]] = val
         else:
           # TODO: log unknown table type
           print("Unknown table type")
@@ -119,7 +140,9 @@ def get_team_stats(url, season):
 
         fields = team.findAll("td")
         for field in fields[1:]:
-          shooting_stats[team_name][field["data-stat"]] = float(field.text) if "." in field.text else int(field.text)
+          val = scraper.get_converted_type(field.text)
+          if val is not None:
+            shooting_stats[team_name][field["data-stat"]] = val
 
     elif table_id == "misc_stats":
       teams = soup.find("table", {"id": "{}".format(table_id)}).find("tbody").findAll("tr")
@@ -137,7 +160,10 @@ def get_team_stats(url, season):
           if field["data-stat"] in ["net_rtg", "attendance", "attendance_per_g"]:
             text = field.text.replace("+", "").replace(",", "")
 
-          team_misc_stats[field["data-stat"]] = float(text) if "." in text else int(text)
+          val = scraper.get_converted_type(text)
+          if val is not None:
+            team_misc_stats[field["data-stat"]] = val
+
         misc_stats.append(team_misc_stats)
 
   all_stats = {}
@@ -149,4 +175,4 @@ def get_team_stats(url, season):
   return all_stats
 
 if __name__ == "__main__":
-  main()
+  run()

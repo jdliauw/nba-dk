@@ -8,7 +8,7 @@ LONG_ABBREV_DICT = {
   "Boston": "BOS",
   "Brooklyn": "BRK",
   "Chicago": "CHI",
-  "Charlotte": "CHO",
+  "Charlotte": "CHO", # CHA
   "Cleveland": "CLE",
   "Dallas": "DAL",
   "Denver": "DEN",
@@ -22,7 +22,8 @@ LONG_ABBREV_DICT = {
   "Miami": "MIA",
   "Milwaukee": "MIL",
   "Minnesota": "MIN",
-  "New Orleans": "NOP",
+  "New Jersey": "NJN",
+  "New Orleans": "NOP", # NOH
   "New York": "NYK",
   "Oklahoma City": "OKC",
   "Orlando": "ORL",
@@ -30,6 +31,7 @@ LONG_ABBREV_DICT = {
   "Phoenix": "PHO",
   "Portland": "POR",
   "Sacramento": "SAC",
+  "Seattle": "SEA",
   "San Antonio": "SAS",
   "Toronto": "TOR",
   "Utah": "UTA",
@@ -61,6 +63,8 @@ def get_number_type(value):
   return value
 
 def get_converted_type(value):
+  if len(value) == 0:
+    return None
   if "." in value:
     value = float(value)
   elif value == "—":
@@ -71,6 +75,7 @@ def get_converted_type(value):
     except:
       if not isinstance(value, str):
         print("WTF DUDE WHAT TYPE IS ME")
+        return None
   return value
 
 # robots.txt asks for 3s

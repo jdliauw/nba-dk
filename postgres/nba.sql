@@ -1,9 +1,10 @@
 CREATE TABLE games(
   season INT,
-  game_date DATE NOT NULL, /* PRIMARY */
-  pid TEXT NOT NULL,       /* PRIMARY */
+  game_date DATE NOT NULL,
+  pid TEXT NOT NULL,
   starter BOOLEAN,
   team TEXT,
+  home TEXT,
   opp TEXT,
   home_score INT,
   away_score INT,
@@ -44,16 +45,17 @@ CREATE TABLE games(
   off_rtg INT,
   def_rtg INT,
   reason TEXT,
-  PRIMARY KEY (game_date, pid)
+  PRIMARY KEY (game_date, pid),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 CREATE TABLE pbp
 (
   id SERIAL NOT NULL,
-  /* PRIMARY */
   season INT,
   game_date DATE NOT NULL,
-  /* PRIMARY */
+  home TEXT,
+  away TEXT,
   assister TEXT,
   away_score INT,
   blocker TEXT,
@@ -76,20 +78,25 @@ CREATE TABLE pbp
   steal TEXT,
   sub_in TEXT,
   sub_out TEXT,
+  team_violation TEXT,
+  tech_type TEXT,
+  ts_timeout TEXT,
   turnover TEXT,
   turnover_type TEXT,
   violation TEXT,
-  PRIMARY KEY (id, game_date)
+  PRIMARY KEY (id, game_date),
+  FOREIGN KEY (assister) REFERENCES player_info (pid),
+  FOREIGN KEY (blocker) REFERENCES player_info (pid),
+  FOREIGN KEY (shooter) REFERENCES player_info (pid),
+  FOREIGN KEY (sub_in) REFERENCES player_info (pid),
+  FOREIGN KEY (sub_out) REFERENCES player_info (pid)
 );
 
 CREATE TABLE college_stats
 (
   pid TEXT NOT NULL,
-  /* PRIMARY */
   season INT,
-  /* PRIMARY */
   college TEXT NOT NULL,
-  /* PRIMARY */
   age INT,
   g INT,
   mp INT,
@@ -114,55 +121,13 @@ CREATE TABLE college_stats
   pts_per_g REAL,
   trb_per_g REAL,
   ast_per_g REAL,
-  PRIMARY KEY (pid, year, college)
-);
-
-CREATE TABLE game_logs
-(
-  pid TEXT NOT NULL,
-  /* PRIMARY */
-  game_date DATE NOT NULL,
-  /* PRIMARY */
-  playoffs BOOLEAN NOT NULL,
-  game_season INT NOT NULL,
-  season INT NOT NULL,
-  age_years INT,
-  age_days INT,
-  team_id TEXT NOT NULL,
-  opp_id TEXT NOT NULL,
-  won BOOLEAN,
-  margin INT,
-  starter BOOLEAN,
-  mp INT,
-  sp INT,
-  fg INT,
-  fga INT,
-  fg_pct REAL,
-  fg3 INT,
-  fg3a INT,
-  fg3_pct REAL,
-  ft INT,
-  fta INT,
-  ft_pct REAL,
-  orb INT,
-  drb INT,
-  trb INT,
-  ast INT,
-  stl INT,
-  blk INT,
-  tov INT,
-  pf INT,
-  pts INT,
-  game_score REAL,
-  plus_minus INT,
-  reason TEXT,
-  PRIMARY KEY (pid, game_date)
+  PRIMARY KEY (pid, season, college),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 CREATE TABLE player_info
 (
   pid TEXT PRIMARY KEY NOT NULL,
-  /* PRIMARY */
   first_name TEXT NOT NULL,
   last_name TEXT,
   feet INT,
@@ -175,7 +140,7 @@ CREATE TABLE player_info
   birth_state TEXT,
   twitter TEXT,
   shoots TEXT,
-  position INT,
+  position TEXT,
   hs_city TEXT,
   hs_state TEXT,
   pick INT,
@@ -185,9 +150,7 @@ CREATE TABLE player_info
 CREATE TABLE player_shooting_stats
 (
   season INT NOT NULL,
-  /* PRIMARY KEY */
   pid TEXT NOT NULL,
-  /* PRIMARY KEY */
   collected_date DATE NOT NULL,
   age INT,
   team_id TEXT,
@@ -217,40 +180,37 @@ CREATE TABLE player_shooting_stats
   fg3_pct_corner REAL,
   fg3a_heave INT,
   fg3_heave INT,
-  PRIMARY KEY(pid, game_date)
+  PRIMARY KEY(pid, season, collected_date),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 CREATE TABLE contracts
 (
   pid TEXT NOT NULL,
-  season INT NOT NULL,
   team TEXT NOT NULL,
-  salary INT NOT NULL,
+  contracts TEXT NOT NULL,
   collected_date DATE NOT NULL,
-  PRIMARY KEY(pid, season, team)
+  PRIMARY KEY(pid, team, collected_date),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 /* salaries may include team/player options so they are not guaranteed */
 CREATE TABLE salaries
 (
   pid TEXT NOT NULL,
-  /* PRIMARY KEY */
   season INT NOT NULL,
-  /* PRIMARY KEY */
   team TEXT NOT NULL,
-  /* PRIMARY KEY */
   salary INT,
   collected_date DATE NOT NULL,
-  PRIMARY KEY(pid, season, team)
+  PRIMARY KEY(pid, season, team),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 CREATE TABLE misc_stats
 (
   collected_date DATE NOT NULL,
   season INT,
-  /* PRIMARY */
   team TEXT NOT NULL,
-  /* PRIMARY */
   age REAL,
   wins INT,
   losses INT,
@@ -277,16 +237,15 @@ CREATE TABLE misc_stats
   arena_name TEXT,
   attendance INT,
   attendance_per_g INT,
-  PRIMARY KEY (collected_date, team)
+  PRIMARY KEY (collected_date, team, season),
+  FOREIGN KEY (pid) REFERENCES player_info (pid)
 );
 
 CREATE TABLE team_shooting_stats
 (
   collected_date DATE NOT NULL,
   season INT,
-  /* PRIMARY */
   team TEXT NOT NULL,
-  /* PRIMARY */
   g INT,
   mp INT,
   fg_pct REAL,
@@ -336,13 +295,12 @@ CREATE TABLE team_shooting_stats
   opp_fg3_pct_ast REAL,
   opp_pct_fg3a_corner REAL,
   opp_fg3_pct_corner REAL,
-  PRIMARY KEY (collected_date, team)
+  PRIMARY KEY (collected_date, team, season)
 );
 
 CREATE TABLE standings
 (
-  collected_date DATE PRIMARY KEY NOT NULL,
-  /* PRIMARY */
+  collected_date DATE NOT NULL,
   season INT,
   team TEXT,
   conference TEXT,
@@ -353,15 +311,14 @@ CREATE TABLE standings
   gb INT,
   pts_per_g REAL,
   opp_pts_per_g REAL,
-  srs REAL
+  srs REAL,
+  PRIMARY KEY (collected_date, team, season)
 );
 
 CREATE TABLE team_stats
 (
   collected_date DATE NOT NULL,
-  /* PRIMARY */
   team TEXT NOT NULL,
-  /* PRIMARY */
   season INT,
   rank INT,
   g INT,
@@ -409,7 +366,7 @@ CREATE TABLE team_stats
   opp_tov INT,
   opp_pf INT,
   opp_pts INT,
-  PRIMARY KEY (collected_date, team)
+  PRIMARY KEY (collected_date, team, season)
 );
 
 CREATE TABLE team_stats_per_100
@@ -463,5 +420,5 @@ CREATE TABLE team_stats_per_100
   opp_tov INT,
   opp_pf INT,
   opp_pts INT,
-  PRIMARY KEY (collected_date, team)
+  PRIMARY KEY (collected_date, team, season)
 );
