@@ -8,3 +8,5 @@ env/
 postgres/pgdata/
 postgres/dump.sql
 .gitignore
+spiders/config.py
+3/
