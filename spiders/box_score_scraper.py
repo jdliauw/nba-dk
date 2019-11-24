@@ -11,14 +11,12 @@ BASE = "https://www.basketball-reference.com"
 def run():
   logging.basicConfig(filename="bss.log", level=logging.DEBUG)
 
-  scrape_day(0,0,0)
-
   # up to the 15th from the 1st
-  # start = date(2008, 10, 24)
-  # end = date(2009, 6, 20) - timedelta(1)
-  # date_range = []
-  # for n in range(int((end - start).days) + 1):
-  #   date_range.append(start + timedelta(n))
+  start = date(2019, 2, 1)
+  end = date(2019, 11, 25) - timedelta(1)
+  date_range = []
+  for n in range(int((end - start).days) + 1):
+    date_range.append(start + timedelta(n))
 
   """
   # yesterday (instead of date range)
@@ -26,62 +24,58 @@ def run():
   date_list = [base - timedelta(days=x) for x in range(0, numdays)]
   yesterday = date.today() - timedelta(1)
   """
-  # f = open("game_dates.json", "r+")
-  # game_dates = json.loads(f.read())
-  # f.close()
+  f = open("game_dates.json", "r+")
+  game_dates = json.loads(f.read())
+  f.close()
 
-  # for dt in date_range:
-  #   print("Scraping games on {}".format(dt.strftime("%Y-%m-%d")))
-  #   game_date = dt.strftime("%Y%m%d")
+  for dt in date_range:
+    print("Scraping games on {}".format(dt.strftime("%Y-%m-%d")))
+    game_date = dt.strftime("%Y%m%d")
 
-  #   if game_date in game_dates:
-  #     print("Already scraped games on {}, skipping".format(dt.strftime("%Y-%m-%d")))
-  #     continue
+    if game_date in game_dates:
+      print("Already scraped games on {}, skipping".format(dt.strftime("%Y-%m-%d")))
+      continue
 
-  #   year = str(dt.year)
-  #   month = dt.month
-  #   month = str(month) if month >= 10 else "0{}".format(month)
-  #   day = str(dt.day)
+    year = str(dt.year)
+    month = dt.month
+    month = str(month) if month >= 10 else "0{}".format(month)
+    day = str(dt.day)
 
-  #   scrape_day(month, day, year) # insert happens in scrape_day()
-  #   f = open("game_dates.json", "r+")
-  #   game_dates = json.loads(f.read())
-  #   f.seek(0)
-  #   f.truncate()
-  #   game_dates.append(game_date)
-  #   game_dates.sort()
-  #   f.write(json.dumps(game_dates))
-  #   f.close()
+    scrape_day(month, day, year) # insert happens in scrape_day()
+    f = open("game_dates.json", "r+")
+    game_dates = json.loads(f.read())
+    f.seek(0)
+    f.truncate()
+    game_dates.append(game_date)
+    game_dates.sort()
+    f.write(json.dumps(game_dates))
+    f.close()
 
 # https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
-  # url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
+  url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
+    # url = "https://www.basketball-reference.com/boxscores/?month=11&day={0}&year=2019".format(day)
 
-  days = range(20,32)
+  scraper.sleep(3,8) 
+  soup = scraper.get_soup(url)
+  if soup is None:
+    # LOG
+    print("no soup for {0}".format(day))
+    return
 
-  for day in days:
-    scraper.sleep(3,8) 
-    url = "https://www.basketball-reference.com/boxscores/?month=11&day={0}&year=2019".format(day)
-    soup = scraper.get_soup(url)
-    if soup is None:
-      # LOG
-      print("no soup for {0}".format(day))
-      return
+  a_tags = soup.find("div", {"class": "game_summaries"})
+  if a_tags is None:
+    print("No games on on {0}".format(day))
 
-    a_tags = soup.find("div", {"class": "game_summaries"})
-    if a_tags is None:
-      print("No games on on {0}".format(day))
-      continue
-
-    a_tags = a_tags.findAll("a")
-    for a_tag in a_tags:
-      href = a_tag["href"]
-      if "boxscore" in href and a_tag.text == 'Box Score':
-        base = "https://www.basketball-reference.com"
-        bs = scrape_box_score(base + href)
-        db.insert(bs, table="games")
-        # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-        # db.insert(pbp, table="pbp")
+  a_tags = a_tags.findAll("a")
+  for a_tag in a_tags:
+    href = a_tag["href"]
+    if "boxscore" in href and a_tag.text == 'Box Score':
+      base = "https://www.basketball-reference.com"
+      bs = scrape_box_score(base + href)
+      db.insert(bs, table="games")
+      # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+      # db.insert(pbp, table="pbp")
 
 # https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
