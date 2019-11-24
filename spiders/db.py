@@ -1,21 +1,25 @@
 import json
-# import psycopg2
+import psycopg2
 
-# database = "player_stats"
-# user = "postgres"
-# password = "postgres"
-# host = "localhost"
-# port = "5432"
-# conn = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
-# cursor = conn.cursor()
+database = "nba"
+user = "postgres"
+password = "postgres"
+host = "localhost"
+port = "5432"
+conn = psycopg2.connect(database=database, user=user, password=password, host=host, port=port)
+cursor = conn.cursor()
 
-# try:
-#     cursor.execute(insert_string)
-#     conn.commit()
-# except Exception as e:
-#     logger.exception("Unable to execute query: {0} for {1} with columns {2}".format(insert_string, playerid, columns))
-#     conn.rollback()
-#     continue
+def exec(query):
+    print("{}".format(query))
+    if True:
+        try:
+            cursor.execute(query)
+            conn.commit()
+            print("Success")
+        except Exception as e:
+            print("Unable to execute query: {0}".format(e))
+            # logger.exception("Unable to execute query: {0}".format(query))
+            conn.rollback()
 
 def insert(stat, table):
     if table in ["team_shooting_stats", "team_stats", "team_stats_per_100"]:
@@ -42,7 +46,7 @@ def insert(stat, table):
             columns = columns[:-1]
             values = values[:-1]
             query = "INSERT INTO {}({}) VALUES ({});".format("contracts", columns, values)
-            print("{}\n".format(query))
+            exec(query)
     elif table == "games":
         insert_list(stat, table)
     else:
@@ -64,7 +68,7 @@ def insert_dict(dict, table):
     columns = columns[:-1]
     values = values[:-1]
     query = "INSERT INTO {}({}) VALUES ({});".format(table, columns, values)
-    print("{}\n".format(query))
+    exec(query)
 
 def insert_list(list, table):
     for dict in list:
@@ -132,6 +136,6 @@ def insert_jsons(stat):
             columns = columns[:-1]
             values = values[:-1]
             query = "INSERT INTO {}({}) VALUES ({});".format("contracts", columns, values)
-            print("{}\n".format(query))
+            exec(query)
     else:
         print("Error reading {} file".format(stat))

@@ -63,7 +63,7 @@ def get_number_type(value):
 def get_converted_type(value):
   if "." in value:
     value = float(value)
-  elif value == "—":
+  elif value == "-":
     value = 0.0
   else:
     try:

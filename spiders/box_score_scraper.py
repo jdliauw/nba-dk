@@ -17,22 +17,33 @@ def main():
 
 # https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
-  url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-  url = "https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019"
-  soup = scraper.get_soup(url)
-  if soup is None:
-    # LOG
-    return
+  # url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
 
-  a_tags = soup.find("div", {"class": "game_summaries"}).findAll("a")
-  for a_tag in a_tags:
-    href = a_tag["href"]
-    if "boxscore" in href and a_tag.text == 'Box Score':
-      base = "https://www.basketball-reference.com"
-      bs = scrape_box_score(base + href)
-      db.insert(bs, table="games")
-      # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-      # db.insert(pbp, table="pbp")
+  days = range(1,32)
+
+  for day in days:
+    scraper.sleep(3,8) 
+    url = "https://www.basketball-reference.com/boxscores/?month=11&day={0}&year=2019".format(day)
+    soup = scraper.get_soup(url)
+    if soup is None:
+      # LOG
+      print("no soup for {0}".format(day))
+      return
+
+    a_tags = soup.find("div", {"class": "game_summaries"})
+    if a_tags is None:
+      print("No games on on {0}".format(day))
+      continue
+
+    a_tags = a_tags.findAll("a")
+    for a_tag in a_tags:
+      href = a_tag["href"]
+      if "boxscore" in href and a_tag.text == 'Box Score':
+        base = "https://www.basketball-reference.com"
+        bs = scrape_box_score(base + href)
+        db.insert(bs, table="games")
+        # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+        # db.insert(pbp, table="pbp")
 
 # https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
@@ -60,7 +71,9 @@ def scrape_box_score(box_score_url):
   for table in tables:
     tbody = table.find("tbody")
     trs = tbody.findAll("tr")
-    team = table.get("id").split("_")[1].upper()
+    team = table.get("id").split("_")[0].split("-")[1]
+
+    print(team)
 
     for i, tr in enumerate(trs):
       player_stats = {
@@ -94,8 +107,8 @@ def scrape_box_score(box_score_url):
             player_stats["play_time_raw"] = td.text
             player_stats["mp"] = int(m)
             player_stats["sp"] = int(m)*60 + int(s)
-
-          player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
+          else:
+            player_stats[td["data-stat"]] = scraper.get_number_type(td.text)
 
         stats.append(player_stats)
       except TypeError:
