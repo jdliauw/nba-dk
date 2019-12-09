@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
-from db import PostgresDB
 from requests_html import HTMLSession
 
+import db
 import json
 import logging
 import pdb
@@ -18,8 +18,7 @@ https://www.basketball-reference.com/players/c/catchha01.html
 """
 
 def run():
-  # 1980 - 2000, 2000 - 2019, 1950
-  for year in range(1950, 2020):
+  for year in range(2020, 2019, -1):
     print("Starting to parse {} season".format(year))
     url = "https://www.basketball-reference.com/leagues/NBA_{}_per_game.html".format(year)
     get_player_urls(url)
@@ -41,7 +40,8 @@ def get_player_urls(url):
 
     # Skip pids already read
     pid = player_url.split("/")[-1].split(".")[0]
-    if pid in pids:
+    # if pid in pids:
+    if pid not in sal_list:
       continue
 
     player_url = BASE + player_url
@@ -49,7 +49,7 @@ def get_player_urls(url):
     print(start_index + i, player_url)
     db_log.write("\n{}".format(player_url))
     player_stats = get_player_info(player_url)
-    pgdb.insert(stat=player_stats, table="player_info")
+    db.insert(stat=player_stats, table="player_info")
     f = open("pids.txt", "a")
     f.write(",{}".format(pid))
     f.close()
@@ -96,6 +96,8 @@ def get_player_info(url):
 
   # CONTRACTS - RENDER REQUIRED
   contracts_table = response.html.find("table[id^='contracts']", first=True)
+  contracts_table = response.html.xpath("//table[contains(@id,'contracts')]", first=True)
+
   if contracts_table is not None:
     contracts_table = contracts_table.html
     all_stats["contracts"] = get_contracts(contracts_table, pid)
@@ -397,6 +399,4 @@ def hide():
   """
 
 if __name__ == "__main__":
-  pgdb = PostgresDB()
   run()
-  pgdb.close()

@@ -12,8 +12,8 @@ def run():
   logging.basicConfig(filename="bss.log", level=logging.DEBUG)
 
   # up to the 15th from the 1st
-  start = date(2019, 2, 1)
-  end = date(2019, 11, 25) - timedelta(1)
+  start = date(2019, 11, 23)
+  end = date(2019, 12, 10) - timedelta(1)
   date_range = []
   for n in range(int((end - start).days) + 1):
     date_range.append(start + timedelta(n))
@@ -65,7 +65,8 @@ def scrape_day(month, day, year):
 
   a_tags = soup.find("div", {"class": "game_summaries"})
   if a_tags is None:
-    print("No games on on {0}".format(day))
+    print("No games on {0}".format(day))
+    return
 
   a_tags = a_tags.findAll("a")
   for a_tag in a_tags:
@@ -104,8 +105,6 @@ def scrape_box_score(box_score_url):
     tbody = table.find("tbody")
     trs = tbody.findAll("tr")
     team = table.get("id").split("_")[0].split("-")[1]
-
-    print(team)
 
     for i, tr in enumerate(trs):
       player_stats = {
@@ -148,6 +147,7 @@ def scrape_box_score(box_score_url):
       except Exception as e:
         logging.error("Exception {} caught".format(e))
 
+  print(stats)
   return stats
 
 # https://www.basketball-reference.com/boxscores/pbp/201902010DEN.html

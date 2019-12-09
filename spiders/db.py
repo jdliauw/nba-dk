@@ -61,8 +61,9 @@ def insert(stat, table):
                 insert_list(stat[table_name], table_name)
         if "player_info" in stat:
             insert_dict(stat["player_info"], "player_info")
-        elif "contracts" in stat and "pid" in stat["contracts"] and "team" in stat["contracts"]:
-            columns, values = "", ""
+        if "contracts" in stat and "pid" in stat["contracts"] and "team" in stat["contracts"]:
+            columns = "{},{},".format("pid","team")
+            values  = "'{}','{}',".format(stat["contracts"]["pid"], stat["contracts"]["team"])
             for key in stat["contracts"].keys():
                 if key not in ["pid", "team"]:
                     value = stat["contracts"][key]

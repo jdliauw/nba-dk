@@ -10,3 +10,7 @@ postgres/dump.sql
 .gitignore
 spiders/config.py
 3/
+**/bss.log
+**/db.log
+spiders/pids.txt
+spiders/game_dates.json
