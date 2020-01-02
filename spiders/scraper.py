@@ -74,7 +74,7 @@ def get_converted_type(value):
       value = int(value)
     except:
       if not isinstance(value, str):
-        print("WTF DUDE WHAT TYPE IS ME")
+        print("Unable to convert: Unknown type")
         return None
   return value
 

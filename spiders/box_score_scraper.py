@@ -10,62 +10,34 @@ BASE = "https://www.basketball-reference.com"
 
 def run():
   logging.basicConfig(filename="bss.log", level=logging.DEBUG)
+  # start = date(2015, 12, 30)
+  # end = date(2016, 1, 1) - timedelta(1)
+  yesterday = datetime.today() - timedelta(1)
+  text = "Scraping games on {}".format(yesterday.strftime("%Y-%m-%d"))
+  logging.info(text)
 
-  # up to the 15th from the 1st
-  start = date(2019, 11, 23)
-  end = date(2019, 12, 10) - timedelta(1)
-  date_range = []
-  for n in range(int((end - start).days) + 1):
-    date_range.append(start + timedelta(n))
+  year = str(yesterday.year)
+  month = yesterday.month
+  month = str(month) if month >= 10 else "0{}".format(month)
+  day = str(yesterday.day)
 
-  """
-  # yesterday (instead of date range)
-  base = datetime.today()
-  date_list = [base - timedelta(days=x) for x in range(0, numdays)]
-  yesterday = date.today() - timedelta(1)
-  """
-  f = open("game_dates.json", "r+")
-  game_dates = json.loads(f.read())
-  f.close()
-
-  for dt in date_range:
-    print("Scraping games on {}".format(dt.strftime("%Y-%m-%d")))
-    game_date = dt.strftime("%Y%m%d")
-
-    if game_date in game_dates:
-      print("Already scraped games on {}, skipping".format(dt.strftime("%Y-%m-%d")))
-      continue
-
-    year = str(dt.year)
-    month = dt.month
-    month = str(month) if month >= 10 else "0{}".format(month)
-    day = str(dt.day)
-
-    scrape_day(month, day, year) # insert happens in scrape_day()
-    f = open("game_dates.json", "r+")
-    game_dates = json.loads(f.read())
-    f.seek(0)
-    f.truncate()
-    game_dates.append(game_date)
-    game_dates.sort()
-    f.write(json.dumps(game_dates))
-    f.close()
+  scrape_day(month, day, year) # insert happens in scrape_day()
 
 # https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
   url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-    # url = "https://www.basketball-reference.com/boxscores/?month=11&day={0}&year=2019".format(day)
 
   scraper.sleep(3,8) 
   soup = scraper.get_soup(url)
   if soup is None:
-    # LOG
-    print("no soup for {0}".format(day))
+    text = "No soup for {0}".format(day)
+    logging.warning(text)
     return
 
   a_tags = soup.find("div", {"class": "game_summaries"})
   if a_tags is None:
-    print("No games on {0}".format(day))
+    text = "No games on {0}".format(day)
+    logging.warning(text)
     return
 
   a_tags = a_tags.findAll("a")
@@ -75,16 +47,16 @@ def scrape_day(month, day, year):
       base = "https://www.basketball-reference.com"
       bs = scrape_box_score(base + href)
       db.insert(bs, table="games")
-      # pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
-      # db.insert(pbp, table="pbp")
+      pbp = scrape_pbp(base + "/boxscores/pbp/" + href.split("/")[-1])
+      db.insert(pbp, table="pbp")
 
 # https://www.basketball-reference.com/boxscores/201902010DEN.html
 def scrape_box_score(box_score_url):
   scraper.sleep(3,4)
   soup = scraper.get_soup(box_score_url)
   if soup is None:
-    # LOG
     return None
+
   home, away = get_teams(soup)
   st = soup.find("meta", {"name": "Description"})["content"]
   st = st[st.find("(") + 1 : st.rfind(")")]
@@ -104,6 +76,12 @@ def scrape_box_score(box_score_url):
   for table in tables:
     tbody = table.find("tbody")
     trs = tbody.findAll("tr")
+    tableid = table.get("id")
+
+    # tables includes quarter by quarter breakdown..for now just take
+    # full stats and advanced stats
+    if 'game' not in tableid:
+      continue
     team = table.get("id").split("_")[0].split("-")[1]
 
     for i, tr in enumerate(trs):
@@ -124,7 +102,6 @@ def scrape_box_score(box_score_url):
         player_stats["pid"] = pid
         player_stats["starter"] = starter
         
-
         # Inefficient, but makes the data cleaner
         for index, stat in enumerate(stats):
           if stat["pid"] == pid:
@@ -147,7 +124,6 @@ def scrape_box_score(box_score_url):
       except Exception as e:
         logging.error("Exception {} caught".format(e))
 
-  print(stats)
   return stats
 
 # https://www.basketball-reference.com/boxscores/pbp/201902010DEN.html
@@ -155,7 +131,8 @@ def scrape_pbp(pbp_url):
   scraper.sleep(3,5)
   soup = scraper.get_soup(pbp_url)
   if soup is None:
-    # LOG
+    text = "No pbp soup: {}".format(url)
+    logging.warning(text)
     return None
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
@@ -170,6 +147,9 @@ def scrape_pbp(pbp_url):
   stats = []
   quarter = 1
 
+  text = "{}, {}".format(pbp_url, game_date)
+  logging.info(text)
+  
   for tr in trs:
     stat = {}
     if tr.get("id") is not None:
@@ -401,6 +381,16 @@ def parse_play(td, stat):
     if len(a_tags) == 1:
       stat["ejected"] = a_tags[0]["href"].split("/")[-1][:-5]
 
+  # REPLAYS 
+  elif "Instant Replay" in td_text:
+    stands = False
+    if "Stands" in td_text:
+      stands = True
+    if "Challenge" in td_text:
+      stat["challenge_stands"] = stands
+    else:
+      stat["replay_stands"] = stands 
+
   # UNKNOWN
   else:
     logging.warning("Unknown type of play: {}, stat: {}".format(td_text, stat))
@@ -410,5 +400,4 @@ def get_teams(soup):
   return teams[1]["href"].split("/")[2], teams[0]["href"].split("/")[2]
 
 if __name__ == '__main__':
-  # pgdb = PostgresDB()
   run()

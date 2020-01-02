@@ -2,39 +2,6 @@ TODO:
 FOREIGN KEYS
 FIX LOG ERRORS
 
-FIX:
-Scraping games on 2017-01-11
-NO SOUP FOR YOU
-Scraping games on 2017-01-12
-NO SOUP FOR YOU
-Scraping games on 2017-01-13
-NO SOUP FOR YOU
-
-Scraping games on 2012-03-08
-NO SOUP FOR YOU
-Scraping games on 2012-03-09
-NO SOUP FOR YOU
-
-Scraping games on 2018-11-03
-NO SOUP FOR YOU
-Scraping games on 2018-11-04
-NO SOUP FOR YOU
-
-WARNING:root:Unknown type of play: Away from play foul by A. Rivers (drawn by D. Harris)
-WARNING:root:Unknown type of play: Clear path foul by D. Augustin
-WARNING:root:Unknown type of play: Defensive three seconds by R. Gomes
-WARNING:root:Unknown type of play: Delay tech foul by Team
-WARNING:root:Unknown type of play: Double technical foul by S. Dalembert and R. Westbrook
-WARNING:root:Unknown type of play: Flagrant foul type 1 by T. Hardaway (drawn by Z. Collins)
-WARNING:root:Unknown type of play: Hanging tech foul by C. Maggette
-WARNING:root:Unknown type of play: Inbound foul by M. Ellis (drawn by V. Carter)
-WARNING:root:Unknown type of play: Offensive charge foul by L. Mbah a Moute (drawn by J. Teague)
-WARNING:root:Unknown type of play: Personal block foul by D. Murray (drawn by W. Chandler)
-WARNING:root:Unknown type of foul: Personal foul by K. Kuzma
-WARNING:root:Unknown type of foul: Personal take foul by A. Harrison
-WARNING:root:Unknown type of play: Shooting block foul by N. Hilario (drawn by A. Wiggins)
-WARNING:root:Unknown type of foul: Technical foul by Team
-
 DONE:
 - Add support parsing for conferences when divisions existed (STUPID)
 
@@ -43,6 +10,9 @@ SCRAPING BEST PRACTICES
 - Add timeout for gets (or will retry)
 - Check for 200 status code
 - Handle exceptions (with logging)
+
+AIRFLOW
+docker run -d -p 8080:8080 -v /Users/jdliauw/Documents/nba/airflow/dags:/usr/local/airflow/dags  puckel/docker-airflow webserver
 
 DOCKER
 - Pull 
@@ -61,6 +31,12 @@ DOCKER
   cat your_dump.sql | docker exec -i your-db-container psql -U postgres
 - Add sql table to nba database
   cat ./nba.sql | docker exec -i postgres_db_1 psql -U postgres -d nba
+
+DUMP
+pg_dump -h database-1.cpagt8glpela.us-east-1.rds.amazonaws.com -U postgres -f dump.sql nba
+
+RESTORE
+pg_restore -c -h database-1.cpagt8glpela.us-east-1.rds.amazonaws.com -U postgres -d nba -v nba.dump
 
 PSQL
 - Format to auto expand
@@ -182,17 +158,3 @@ Binaries: Non human readable files, can be executables which are compiled binari
 Linux file system: /bin: for binaries, /lib: necessary libraries, /etc: configuration files
 Docker: compose (yaml) is for multiple container launching (to avoid docker run), but all on same host
         swarm is orchestration, like kubernetes (google)
-
-387  psql -d postgres
-388  sudo -u postgres -i
-389  sudo -u postgres createuser ubuntu
-390  psql -d postgres
-391  clear
-392  psq
-393  psql
-394  psql -d postgres
-395  psql -d ubuntu
-396  psql -d postgres
-397  su postgres
-398  sudo -u postgres -i
-399  history

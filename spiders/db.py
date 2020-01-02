@@ -32,6 +32,7 @@ def delete_pids(table):
 
 def insert_to_db(insert_query):
     try:
+        print("query: {}".format(insert_query))
         cursor.execute(insert_query)
         conn.commit()
     except psycopg2.IntegrityError as e:
