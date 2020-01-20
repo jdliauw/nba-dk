@@ -147,7 +147,7 @@ def scrape_pbp(pbp_url):
   stats = []
   quarter = 1
 
-  text = "{}, {}".format(pbp_url, game_date)
+  text = "Scraping {}".format(pbp_url)
   logging.info(text)
   
   for tr in trs:

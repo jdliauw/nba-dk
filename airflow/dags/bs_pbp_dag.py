@@ -8,7 +8,6 @@ default_args = {
     'owner': 'jdliauw',
     'depends_on_past': False,
     'start_date': datetime(2020, 1, 1),
-    'schedule_interval': '30 5  * * *',
     'email': ['jdliauw@gmail.com'],
     'email_on_failure': True,
     'email_on_retry': False,
@@ -16,7 +15,10 @@ default_args = {
     'retry_delay': timedelta(minutes=1),
 }
 
-dag = DAG('boxscore_pbp', default_args=default_args)
+dag = DAG(
+    dag_id='boxscore_pbp',
+    default_args=default_args,
+    schedule_interval='0 13  * * *')
 
 t1 = PythonOperator(
     task_id='boxscore_pbp',
