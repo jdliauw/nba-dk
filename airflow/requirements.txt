@@ -1,5 +1,5 @@
 beautifulsoup4==4.8.1
 bs4==0.0.1
 requests-html==0.10.0
-urllib3==1.25.7
+urllib3==1.26.5
 websockets==8.1
