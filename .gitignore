@@ -3,6 +3,11 @@
 env/
 **.pyc
 **/*.pyc
+**/*.swp
+**/*.swo
 .postgres/pgdata/*
 .vscode/
 postgres/pgdata/
+postgres/nba.sql
+nba.pem
+3/

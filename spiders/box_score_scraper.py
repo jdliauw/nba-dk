@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta
 
@@ -17,8 +18,8 @@ def main():
 
 # https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019
 def scrape_day(month, day, year):
-  url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
-  url = "https://www.basketball-reference.com/boxscores/?month=02&day=6&year=2019"
+  # url = "https://www.basketball-reference.com/boxscores/?month={}&day={}&year={}".format(month, day, year)
+  url = "https://www.basketball-reference.com/boxscores/?month=02&day=15&year=2019"
   soup = scraper.get_soup(url)
   if soup is None:
     # LOG

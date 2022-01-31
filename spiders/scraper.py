@@ -37,7 +37,9 @@ LONG_ABBREV_DICT = {
 }
 
 def get_soup(url, render=False):
+  print("getting soup for {}".format(url))
   session = HTMLSession()
+  sleep(3,5)
   response = session.get(url,timeout=5)
   if response.status_code != 200:
     return None
@@ -63,7 +65,7 @@ def get_number_type(value):
 def get_converted_type(value):
   if "." in value:
     value = float(value)
-  elif value == "—":
+  elif value == "-":
     value = 0.0
   else:
     try:
