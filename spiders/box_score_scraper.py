@@ -116,7 +116,6 @@ def scrape_pbp(pbp_url):
   home, away = get_teams(soup)
   trs = soup.find("table", {"id": "pbp"}).findAll("tr")
   game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
-  game_date = soup.find("div", {"class": "scorebox_meta"}).find("div").text
   game_date = datetime.strptime(game_date, "%I:%M %p, %B %d, %Y")
   season = game_date.year
   if game_date.month > 8:

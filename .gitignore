@@ -1,6 +1,5 @@
 ./__pycache__
 .DS_Store
-env/
 **.pyc
 **/*.pyc
 **/*.swp
@@ -8,6 +7,5 @@ env/
 .postgres/pgdata/*
 .vscode/
 postgres/pgdata/
-postgres/nba.sql
 nba.pem
-3/
+**/*constants.py

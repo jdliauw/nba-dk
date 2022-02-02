@@ -44,7 +44,7 @@ def get_soup(url, render=False):
   if response.status_code != 200:
     return None
   if render:
-    response.render()
+    response.html.render()
   soup = BeautifulSoup(response.text, "html.parser")
   return soup
 
