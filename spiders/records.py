@@ -7,9 +7,17 @@ SCOREBOARD_PREFIX = "https://www.espn.com/nba/scoreboard/_/date/"
 MATCHUP_PREFIX = "https://www.espn.com/nba/matchup?gameId="
 RECORDS_JSON = "jsons/records.json"
 
-class Records:
-    def __init__(self):
+class HistoricRecords:
+    def __init__(self, test_mode):
         self.Records = self.grab_existing_record_history()
+        self.next_check_date = self.set_next_check_date()
+        self.test_mode = test_mode
+
+    def set_next_check_date(self):
+        now = datetime.now()
+        tomorrow = now + timedelta(1)
+        tomorrow = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 8, 0, 0)
+        return tomorrow
 
     def grab_existing_record_history(self):
         f = open(RECORDS_JSON)
@@ -21,7 +29,8 @@ class Records:
         return records
 
     def grab_game_ids(self):
-        start_date = datetime(2022, 1, 31)
+        # start_date = datetime(2021, 10, 19)
+        start_date = datetime.now() - timedelta(7)
         end_date = datetime.now() - timedelta(1)
 
         # start of 2021-2022 NBA season (datetime(2021, 10, 19))
@@ -95,6 +104,7 @@ class Records:
                             skip = True
                             break
                     if not skip:
+                        print("Appending game_id {}".format(game_id))
                         self.Records[team].append(records[team])
                 else:
                     self.Records[team] = [records[team]]
@@ -108,15 +118,15 @@ class Records:
         f.write(str(json_string))
         f.close()
 
-def get_records():
-    records = Records()
-    # game_ids = records.grab_game_ids()
-    # for k, game_id in enumerate(game_ids):
-    #     records.update_records("{0}{1}".format(MATCHUP_PREFIX, game_id))
-    # records.update_records_json()
-    return records.Records
+    def get_records(self):
+        now = datetime.now()
+        if self.test_mode or now < self.next_check_date:
+            return
 
-def main():
-    records = get_records()
+        self.next_check_date = self.set_next_check_date()
+        game_ids = self.grab_game_ids()
 
-main()
+        for k, game_id in enumerate(game_ids):
+            self.update_records("{0}{1}".format(MATCHUP_PREFIX, game_id))
+        self.update_records_json()
+        return self.Records

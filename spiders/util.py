@@ -18,3 +18,9 @@ def get_list_of_formatted_dates(start_date, end_date):
         day = str(day) if day >= 10 else "0{}".format(day)
         formatted_dates.append("{0}{1}{2}".format(year, month, day))
     return formatted_dates
+
+def format_date(date):
+    day, month, year = date.day, date.month, str(date.year)
+    month = str(month) if month >= 10 else "0{}".format(month)
+    day = str(day) if day >= 10 else "0{}".format(day)
+    return "{}{}{}".format(year, month, day)

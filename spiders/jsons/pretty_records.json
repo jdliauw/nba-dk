@@ -407,6 +407,22 @@
             "largest_deficit": 36,
             "opp_team": "denver-nuggets",
             "win": false
+        },
+        {
+            "game_date": "2021-10-30",
+            "game_id": "401359915",
+            "largest_lead": 0,
+            "largest_deficit": 17,
+            "opp_team": "utah-jazz",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360587",
+            "largest_lead": 17,
+            "largest_deficit": 3,
+            "opp_team": "washington-wizards",
+            "win": true
         }
     ],
     "brooklyn-nets": [
@@ -800,6 +816,14 @@
             "largest_lead": 6,
             "largest_deficit": 19,
             "opp_team": "golden-state-warriors",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360591",
+            "largest_lead": 1,
+            "largest_deficit": 14,
+            "opp_team": "phoenix-suns",
             "win": false
         }
     ],
@@ -1620,6 +1644,14 @@
             "largest_lead": 18,
             "largest_deficit": 4,
             "opp_team": "houston-rockets",
+            "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360590",
+            "largest_lead": 4,
+            "largest_deficit": 17,
+            "opp_team": "san-antonio-spurs",
             "win": true
         }
     ],
@@ -2843,6 +2875,14 @@
             "largest_deficit": 15,
             "opp_team": "cleveland-cavaliers",
             "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360585",
+            "largest_lead": 15,
+            "largest_deficit": 11,
+            "opp_team": "new-orleans-pelicans",
+            "win": false
         }
     ],
     "chicago-bulls": [
@@ -3236,6 +3276,14 @@
             "largest_lead": 19,
             "largest_deficit": 8,
             "opp_team": "portland-trail-blazers",
+            "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360588",
+            "largest_lead": 13,
+            "largest_deficit": 7,
+            "opp_team": "orlando-magic",
             "win": true
         }
     ],
@@ -4443,6 +4491,22 @@
             "largest_deficit": 11,
             "opp_team": "atlanta-hawks",
             "win": true
+        },
+        {
+            "game_date": "2022-1-14",
+            "game_id": "401360460",
+            "largest_lead": 8,
+            "largest_deficit": 15,
+            "opp_team": "milwaukee-bucks",
+            "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360603",
+            "largest_lead": 8,
+            "largest_deficit": 15,
+            "opp_team": "miami-heat",
+            "win": true
         }
     ],
     "washington-wizards": [
@@ -4836,6 +4900,14 @@
             "largest_lead": 0,
             "largest_deficit": 27,
             "opp_team": "memphis-grizzlies",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360587",
+            "largest_lead": 3,
+            "largest_deficit": 17,
+            "opp_team": "milwaukee-bucks",
             "win": false
         }
     ],
@@ -6067,6 +6139,22 @@
             "largest_deficit": 7,
             "opp_team": "utah-jazz",
             "win": true
+        },
+        {
+            "game_date": "2021-11-26",
+            "game_id": "401360116",
+            "largest_lead": 20,
+            "largest_deficit": 3,
+            "opp_team": "philadelphia-76ers",
+            "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360589",
+            "largest_lead": 30,
+            "largest_deficit": 7,
+            "opp_team": "denver-nuggets",
+            "win": true
         }
     ],
     "houston-rockets": [
@@ -6863,6 +6951,22 @@
             "largest_deficit": 5,
             "opp_team": "cleveland-cavaliers",
             "win": false
+        },
+        {
+            "game_date": "2021-10-29",
+            "game_id": "401359904",
+            "largest_lead": 0,
+            "largest_deficit": 16,
+            "opp_team": "new-york-knicks",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360585",
+            "largest_lead": 11,
+            "largest_deficit": 15,
+            "opp_team": "detroit-pistons",
+            "win": true
         }
     ],
     "philadelphia-76ers": [
@@ -7675,6 +7779,14 @@
             "largest_deficit": 6,
             "opp_team": "phoenix-suns",
             "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360590",
+            "largest_lead": 17,
+            "largest_deficit": 4,
+            "opp_team": "golden-state-warriors",
+            "win": false
         }
     ],
     "orlando-magic": [
@@ -8077,6 +8189,22 @@
             "largest_deficit": 11,
             "opp_team": "dallas-mavericks",
             "win": true
+        },
+        {
+            "game_date": "2022-1-8",
+            "game_id": "401360417",
+            "largest_lead": 10,
+            "largest_deficit": 10,
+            "opp_team": "washington-wizards",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360588",
+            "largest_lead": 7,
+            "largest_deficit": 13,
+            "opp_team": "chicago-bulls",
+            "win": false
         }
     ],
     "utah-jazz": [
@@ -8479,6 +8607,14 @@
             "largest_deficit": 21,
             "opp_team": "minnesota-timberwolves",
             "win": false
+        },
+        {
+            "game_date": "2021-10-30",
+            "game_id": "401359915",
+            "largest_lead": 17,
+            "largest_deficit": 0,
+            "opp_team": "milwaukee-bucks",
+            "win": true
         }
     ],
     "oklahoma-city-thunder": [
@@ -9267,6 +9403,14 @@
             "largest_deficit": 12,
             "opp_team": "san-antonio-spurs",
             "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360591",
+            "largest_lead": 14,
+            "largest_deficit": 1,
+            "opp_team": "brooklyn-nets",
+            "win": true
         }
     ],
     "denver-nuggets": [
@@ -9661,6 +9805,14 @@
             "largest_deficit": 4,
             "opp_team": "milwaukee-bucks",
             "win": true
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360589",
+            "largest_lead": 7,
+            "largest_deficit": 30,
+            "opp_team": "minnesota-timberwolves",
+            "win": false
         }
     ],
     "portland-trail-blazers": [
@@ -11710,6 +11862,14 @@
             "largest_lead": 0,
             "largest_deficit": 32,
             "opp_team": "boston-celtics",
+            "win": false
+        },
+        {
+            "game_date": "2022-2-1",
+            "game_id": "401360603",
+            "largest_lead": 15,
+            "largest_deficit": 8,
+            "opp_team": "toronto-raptors",
             "win": false
         }
     ],
