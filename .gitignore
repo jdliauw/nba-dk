@@ -3,9 +3,9 @@
 **.pyc
 **/*.pyc
 **/*.swp
-**/*.swo
-.postgres/pgdata/*
 .vscode/
+.postgres/pgdata/*
 postgres/pgdata/
+postgres/dump.sql
 nba.pem
 **/*constants.py
