@@ -2,8 +2,8 @@
 from argparse import ArgumentParser
 from datetime import datetime, date, timedelta
 
+import constants
 import db
-import json
 import logging
 import scraper
 
@@ -250,7 +250,7 @@ def parse_play(td, stat):
   elif " timeout" in td_text:
     team = td_text[:td_text.find(" full timeout")]
     if len(team) > 0:
-      stat["full_timeout"] = scraper.LONG_ABBREV_DICT[team]
+      stat["full_timeout"] = constants.LONG_ABBREV_DICT[team]
 
   # TURNOVERS
   elif "Turnover " in td_text:

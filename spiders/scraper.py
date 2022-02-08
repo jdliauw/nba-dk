@@ -3,41 +3,8 @@ from requests_html import HTMLSession
 import random
 import time
 
-LONG_ABBREV_DICT = {
-  "Atlanta": "ATL",
-  "Boston": "BOS",
-  "Brooklyn": "BRK",
-  "Chicago": "CHI",
-  "Charlotte": "CHO",
-  "Cleveland": "CLE",
-  "Dallas": "DAL",
-  "Denver": "DEN",
-  "Detroit": "DET",
-  "Golden State": "GSW",
-  "Houston": "HOU",
-  "Indiana": "IND",
-  "LA Clippers": "LAC",
-  "LA Lakers": "LAL",
-  "Memphis": "MEM",
-  "Miami": "MIA",
-  "Milwaukee": "MIL",
-  "Minnesota": "MIN",
-  "New Orleans": "NOP",
-  "New York": "NYK",
-  "Oklahoma City": "OKC",
-  "Orlando": "ORL",
-  "Philadelphia": "PHI",
-  "Phoenix": "PHO",
-  "Portland": "POR",
-  "Sacramento": "SAC",
-  "San Antonio": "SAS",
-  "Toronto": "TOR",
-  "Utah": "UTA",
-  "Washington": "WAS"
-}
 
 def get_soup(url, render=False):
-  print("getting soup for {}".format(url))
   session = HTMLSession()
   sleep(3,5)
   response = session.get(url,timeout=5)
