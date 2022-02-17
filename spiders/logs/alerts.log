@@ -1,0 +1,4 @@
+2022-02-08 16:44:44 INFO Iteration at 16:44:44
+2022-02-08 16:44:44 INFO Test mode: True, now (202228) < self.next_check_date (197011)
+2022-02-08 16:44:44 INFO Game score diffs: {'DET Pistons vs. NO Pelicans': 6, 'MIL Bucks vs. WAS Wizards': 13, 'TOR Raptors vs. MIA Heat': 12, 'MIN Timberwolves vs. DEN Nuggets': 11, 'CHI Bulls vs. ORL Magic': 6, 'SA Spurs vs. GS Warriors': 7}
+2022-02-08 16:44:44 INFO No games satisfy differential condition
