@@ -44,8 +44,8 @@ class HistoricRecords:
         for formatted_date in formatted_dates:
             # "https://www.espn.com/nba/scoreboard/_/date/20220128"
             url = "{0}{1}".format(SCOREBOARD_PREFIX, formatted_date)
+            logging.info('Grabbing soup for {}'.format(url))
             soup = scraper.get_soup(url)
-            logging.info('Grabbed soup for {}'.format(url))
 
             # DO NOT update self.Games, we will update when we've actually updated the record
             if formatted_date not in self.Games or formatted_date not in self.games_to_add:

@@ -13,7 +13,7 @@ class Alert:
     def __init__(self, test_mode):
         self.client = Client(constants.TWILIO_SID, constants.TWILIO_TOKEN)
         self.dk_spreads = []
-        self.differential = 15
+        self.differential = 20
         self.text_entries = {}
         self.sleep_time = 0
         self.test_mode = test_mode
@@ -35,36 +35,42 @@ class Alert:
             return
 
         # scenario 2: there are games that are live, don't re-check until tomorrow at 8 AM
-        nba_game_times_url = "https://www.google.com/search?q=nba+games+tonight&rlz=1C5CHFA_enUS873US873&oq=nba+games+tonight&aqs=chrome.0.69i59.2874j0j4&sourceid=chrome&ie=UTF-8"
+        nba_game_times_url = "https://www.google.com/search?q=nba+games+today"
         soup = scraper.get_soup(nba_game_times_url)
         logging.info('Grabbed soup for {}'.format(nba_game_times_url))
         spans = soup.findAll('span', {'class':'imso-medium-font'})
         if len(spans) > 0:
             self.sleep_time = 0
             self.next_live_game_check = datetime(self.now.year, self.now.month, self.now.day+1, 8, 0, 0)
-            logging.info('There are live games, don\'t re-check for live games until tomorrow at 8 AM')
+            logging.info('There are live games, don\'t re-check for live games until tomorrow at 8 AM ({} seconds)'.format(self.next_live_game_check))
             return
 
         # scenario 3: there are games today but they aren't being played yet. Sleep until 10 minutes before the first game start time
-        first_game_time = soup.find('div', {'class':'imspo_mt__ndl-p imspo_mt__pm-inf imspo_mt__pm-infc imso-medium-font'})
-        if first_game_time is not None:
-            first_game_time = first_game_time.text.strip()
-            if len(first_game_time) > 0:
-                first_game_time = datetime.strptime(first_game_time, '%I:%M %p')
-                first_game_time = datetime(now.year, now.month, now.day, first_game_time.hour, first_game_time.minute, 0)
-                # sleep until ten minutes before the next game time
-                self.sleep_time = (first_game_time - now).seconds - 600
-                logging.info('There are games today but they aren\'t being played yet. Sleep until 10 minutes before the first game start time')
-                return
+        game_times = soup.findAll('div', {'class': 'imspo_mt__mtc-no'})
+        first_game_time = None
+        for game_time in game_times:
+            game_time = game_time.find('div', {'class':'imspo_mt__ndl-p imspo_mt__pm-inf imspo_mt__pm-infc imso-medium-font'})
+            if game_time is not None:
+                first_game_time = game_time.text.strip()
+                break
+
+        if len(first_game_time) > 0:
+            first_game_time_text = first_game_time
+            first_game_time = datetime.strptime(first_game_time, '%I:%M %p')
+            first_game_time = datetime(self.now.year, self.now.month, self.now.day, first_game_time.hour, first_game_time.minute, 0)
+            # sleep until ten minutes before the next game time
+            self.sleep_time = (first_game_time - self.now).seconds - 600
+            logging.info('There are games today but they aren\'t being played yet. Sleep until 10 minutes before the first game start time at {} ({} seconds)'.format(first_game_time_text, self.sleep_time))
+            return
 
         # scenario 4: there are (1) no live games today or (2) games scheduled for later today. Check tomorrow at 8 AM
         today = soup.find('div', {'class':'imspo_mt__pm-inf imspo_mt__pm-infc imspo_mt__date imso-medium-font'})
         if today is not None:
             today = today.text.strip().lower() == 'today'
         if not today:
-            self.next_live_game_check = datetime(now.year, now.month, now.day+1, 8, 0, 0)
-            self.sleep_time = (self.next_live_game_check - now).seconds
-            logging.info('There are no games today. Check tomorrow at 8 AM')
+            self.next_live_game_check = datetime(self.now.year, self.now.month, self.now.day+1, 8, 0, 0)
+            self.sleep_time = (self.next_live_game_check - self.now).seconds
+            logging.info('There are no games today. Check tomorrow at 8 AM ({} seconds)'.format(self.sleep_time))
             return
 
         # scenario 5: shit's broken
@@ -79,8 +85,20 @@ class Alert:
             soup = BeautifulSoup(soup, "html.parser")
         else:
             draft_kings_sportsbook_url = "https://sportsbook.draftkings.com/leagues/basketball/88670846"
-            soup = scraper.get_soup(draft_kings_sportsbook_url)
-            logging.info('Grabbed soup for {}'.format(draft_kings_sportsbook_url))
+            loop = 5 + 1
+            success = False
+            while loop > 0:
+                try:
+                    soup = scraper.get_soup(draft_kings_sportsbook_url)
+                    logging.info('Grabbed soup for {}'.format(draft_kings_sportsbook_url))
+                    loop = 0
+                    success = True
+                except:
+                    logging.info('Failed dk scrape {}'.format(draft_kings_sportsbook_url))
+                    loop = loop - 1
+            if not success:
+                logging.critical('Failed scrape after {} attempts'.format(loop))
+                return
 
         tbody = soup.find('tbody', {'class': 'sportsbook-table__body'})
         trs = tbody.findAll('tr')
@@ -292,10 +310,15 @@ class Alert:
                         message = self.client.messages.create(body=text, from_=constants.TWILIO_NUMBER, to=phone_number)
                         text_sent_date_key = self.now.strftime('%Y-%m-%d')
                         if text_sent_date_key not in self.texts_sent:
-                            self.text_sent[text_sent_date_key] = 0
+                            self.texts_sent[text_sent_date_key] = 0
                         else:
-                            self.text_sent[text_sent_date_key] += 1
+                            self.texts_sent[text_sent_date_key] += 1
                         logging.info("Message '{0}' sent to {1}.".format(message.body, phone_number))
+
+    def send_fail_text(self):
+        text = 'alerts.py failed'
+        message = self.client.messages.create(body=text, from_=constants.TWILIO_NUMBER, to=constants.MY_PHONE_NUMBER)
+        logging.info("Script failure message: '{0}' sent to {1}.".format(message.body, constants.MY_PHONE_NUMBER))
 
     def check_for_inactive_players(self):
         # https://sports.yahoo.com/nba/charlotte-hornets-boston-celtics-2022020202/
@@ -303,6 +326,9 @@ class Alert:
 
     def sleep(self):
         ten_percent = int(.10 * self.sleep_time)
+        # Max deviation of 30 seconds
+        if ten_percent > 30:
+            ten_percent = 30
         scraper.sleep(self.sleep_time-ten_percent, self.sleep_time+ten_percent)
         alert.sleep_time = 0
 
@@ -351,23 +377,28 @@ if __name__ == '__main__':
 
     historic = records.HistoricRecords(not args.prod)
     alert = Alert(not args.prod)
+    loop = True
 
-    while True:
-        alert.now = datetime.now()
-        alert.iterations.append(alert.now)
-        if alert.check_terminate():
-            break
+    while loop:
+        try:
+            alert.now = datetime.now()
+            alert.iterations.append(alert.now)
+            if alert.check_terminate():
+                break
 
-        logging.info('Iteration at {}'.format(alert.now.strftime('%H:%M:%S')))
-        alert.check_for_live_games()
-        if alert.sleep_time == 0:
-            alert.get_dk_spreads(file)
-        if alert.sleep_time > 0:
-            alert.sleep()
-            continue
-        historic.get_records()
-        alert.check_spreads(historic.Records)
-        alert.send_texts()
+            logging.info('Iteration at {}'.format(alert.now.strftime('%H:%M:%S')))
+            alert.check_for_live_games()
+            if alert.sleep_time == 0:
+                alert.get_dk_spreads(file)
+            if alert.sleep_time > 0:
+                alert.sleep()
+                continue
+            historic.get_records()
+            alert.check_spreads(historic.Records)
+            alert.send_texts()
 
-        # run every 1.5 - 2.5 minutes
-        scraper.sleep(120, 150)
+            # run every 1.5 - 2.5 minutes
+            scraper.sleep(120, 150)
+        except Exception as e:
+            logging.critical(e)
+            loop = False
